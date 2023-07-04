@@ -1,17 +1,5 @@
 <?php
-/**
- * Mass image downsizer task
- *
- * Note 1: Backups of your data is your responsibility. This task will
- * downsize and replace any larger src images in your assets folder.
- *
- * Note 2: This task will auto-publish all images.
- *
- * Instructions:
- * - Copy this task to your tasks folder (eg: app/tasks)
- * - Edit the $maxImgWidth & $maxImgHeight values to your maximum sizes (pixels)
- * - Run `vendor/bin/sake dev/tasks/ImageDownsizeTask` in your CLI
- */
+
 
 namespace Sunnysideup\ResizeAllImages\Tasks;
 
