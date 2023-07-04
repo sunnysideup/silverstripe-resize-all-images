@@ -119,12 +119,10 @@ class ResizeAllImagesTask extends BuildTask
                         DB::query('UPDATE "File_Live" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$image->ID);
                     }
                 }
-                echo 'Publishing '.$image->getFilename().PHP_EOL;
+                echo 'Updating Hash for '.$image->getFilename().PHP_EOL;
                 if(! $image->exists()) {
                     echo 'ERROR: Image does not exist: '.$image->getFilename().PHP_EOL;
-                } else {
-                    $image->publishSingle();
-                }
+                } 
             } catch (Exception $e) {
                 echo $e->getMessage().PHP_EOL;
             }
