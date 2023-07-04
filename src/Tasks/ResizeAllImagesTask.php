@@ -65,7 +65,7 @@ class ResizeAllImagesTask extends BuildTask
      *
      * @var bool test only?
      */
-    private $dryRun = false;
+    private $dryRun = true;
 
     /**
      * Run
@@ -111,9 +111,13 @@ class ResizeAllImagesTask extends BuildTask
                     $fs = AssetStore::VISIBILITY_PROTECTED;
                 }
                 $hash = $hasher->computeFromFile($image->getFilename(), $fs);
-                DB::query('UPDATE "File" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$image->ID);
+                if(! $this->dryRun) {
+                    DB::query('UPDATE "File" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$image->ID);
+                }
                 if($image->isPublished()) {
-                    DB::query('UPDATE "File_Live" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$image->ID);
+                    if(! $this->dryRun) {
+                        DB::query('UPDATE "File_Live" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$image->ID);
+                    }
                 }
                 echo 'Publishing '.$image->getFilename().PHP_EOL;
                 if(! $image->exists()) {
