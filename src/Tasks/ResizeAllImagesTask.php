@@ -16,7 +16,7 @@ use SilverStripe\ORM\DB;
 use Sunnysideup\ResizeAssets\ResizeAssetsRunner;
 use SilverStripe\Core\Config\Config;
 
-class ResizeImagesNew extends BuildTask
+class ResizeAllImagesTask extends BuildTask
 {
     /**
      * Title
