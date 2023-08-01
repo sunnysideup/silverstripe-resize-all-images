@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Sunnysideup\ResizeAllImages\Tasks;
 
 use Exception;
@@ -96,37 +95,9 @@ class ResizeAllImagesTask extends BuildTask
             Config::inst()->get(static::class, 'max_height'),
             $this->dryRun
         );
-
-        // RUN!
-        /** @var Sha1FileHashingService $hasher */
-        $hasher = Injector::inst()->get(FileHashingService::class);
-        $imagesIds = Image::get()->columnUnique();
-        foreach($imagesIds as $imageID) {
-            $image = Image::get()->byID($imageID);
-            try {
-                $hasher::flush();
-                if($image->isPublished()) {
-                    $fs = AssetStore::VISIBILITY_PUBLIC;
-                } else {
-                    $fs = AssetStore::VISIBILITY_PROTECTED;
-                }
-                $hash = $hasher->computeFromFile($image->getFilename(), $fs);
-                if(! $this->dryRun) {
-                    DB::query('UPDATE "File" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$image->ID);
-                }
-                if($image->isPublished()) {
-                    if(! $this->dryRun) {
-                        DB::query('UPDATE "File_Live" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$image->ID);
-                    }
-                }
-                echo 'Updating Hash for '.$image->getFilename().PHP_EOL;
-                if(! $image->exists()) {
-                    echo 'ERROR: Image does not exist: '.$image->getFilename().PHP_EOL;
-                } 
-            } catch (Exception $e) {
-                echo $e->getMessage().PHP_EOL;
-            }
-
-        }
+        echo '---'.PHP_EOL;
+        echo '---'.PHP_EOL;
+        echo 'DONE - consider running dev/tasks/FixHashes'.PHP_EOL;
+        echo '---'.PHP_EOL;
     }
 }
