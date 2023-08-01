@@ -1,6 +1,6 @@
 <?php
 
-namespace Sunnysideup\ResizeAssets;
+namespace Sunnysideup\ResizeAllImages\Tasks;
 
 use Exception;
 use SilverStripe\Assets\Image;
@@ -12,6 +12,7 @@ use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\BuildTask;
+use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use Sunnysideup\ResizeAssets\ResizeAssetsRunner;
 
@@ -62,14 +63,14 @@ class ResizeImagesNew extends BuildTask
         echo '---'.PHP_EOL;
         echo '---'.PHP_EOL;
 
-        $realRun = isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] === "--real-run";
-        $this->dryRun = !$realRun;
+        $this->dryRun = !in_array('--real-run', $_SERVER['argv']);
 
         /** @var Sha1FileHashingService $hasher */
         $hasher = Injector::inst()->get(FileHashingService::class);
         $imagesIds = Image::get()->columnUnique();
         foreach($imagesIds as $imageID) {
             $image = Image::get()->byID($imageID);
+            $isPublished = $image->isPublished();
             try {
                 echo 'Fixing '.$image->getFilename().PHP_EOL;
                 $hasher::flush();
@@ -87,17 +88,11 @@ class ResizeImagesNew extends BuildTask
                         DB::query('UPDATE "File_Live" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$image->ID);
                     }
                 }
+                $image = DataObject::get_by_id(Image::class, $image->ID);
                 if(! $image->exists()) {
-                    if(! $this->dryRun) {
-                        $image->doArchive();
-                        echo 'ERROR: Image does not exist: '.$image->getFilename().'. It has been archived' . PHP_EOL;
-                    } else {
-                        echo 'ERROR: Image does not exist: '.$image->getFilename().'. It would have been archived' . PHP_EOL;
-                    }
+                    echo 'ERROR: hash not fixed yet: '.$image->getFilename().'. Please run task again.' . PHP_EOL;
                 } else {
-                    if(! $this->dryRun) {
-                        $image->publishSingle();
-                    }
+                    echo 'SUCCESS: Image exists: '.$image->getFilename() . PHP_EOL;
                 }
             } catch (Exception $e) {
                 echo $e->getMessage().PHP_EOL;

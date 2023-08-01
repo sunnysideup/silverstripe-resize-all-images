@@ -82,8 +82,7 @@ class ResizeAllImagesTask extends BuildTask
         echo '---'.PHP_EOL;
         echo '---'.PHP_EOL;
 
-        $realRun = isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] === "--real-run";
-        $this->dryRun = !$realRun;
+        $this->dryRun = !in_array('--real-run', $_SERVER['argv']);
 
         ResizeAssetsRunner::run_dir(
             ASSETS_PATH,
