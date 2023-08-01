@@ -43,7 +43,7 @@ class ResizeImagesNew extends BuildTask
      *
      * @var string
      */
-    private static $segment = 'FixHashes';
+    private static $segment = 'fix-hashes';
 
     private $dryRun = true;
 
@@ -62,6 +62,8 @@ class ResizeImagesNew extends BuildTask
         echo '---'.PHP_EOL;
         echo '---'.PHP_EOL;
 
+        $realRun = isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] === "--real-run";
+        $this->dryRun = !$realRun;
 
         /** @var Sha1FileHashingService $hasher */
         $hasher = Injector::inst()->get(FileHashingService::class);

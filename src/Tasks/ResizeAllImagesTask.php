@@ -50,14 +50,14 @@ class ResizeAllImagesTask extends BuildTask
      *
      * @var int px
      */
-    private static $max_width = 1300;
+    private static $max_width = 1600;
 
     /**
      * Image max height - images larger than this height will be downsized
      *
      * @var int px
      */
-    private static $max_height = 786;
+    private static $max_height = 1600;
 
     /**
      * test only?
@@ -82,22 +82,18 @@ class ResizeAllImagesTask extends BuildTask
         echo '---'.PHP_EOL;
         echo '---'.PHP_EOL;
 
-        // vendor/league/flysystem/src/Adapter/Local.php:288
-        // if(file_exists($location.'/'.$file)) {
-        //     $result[] = $this->normalizeFileInfo($file);
-        // } else {
-        //     echo $location.'/'.$file.'----------------------'.PHP_EOL;
-        // }
-        $directory = ASSETS_PATH;
+        $realRun = isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] === "--real-run";
+        $this->dryRun = !$realRun;
+
         ResizeAssetsRunner::run_dir(
-            $directory,
+            ASSETS_PATH,
             Config::inst()->get(static::class, 'max_width'),
             Config::inst()->get(static::class, 'max_height'),
             $this->dryRun
         );
         echo '---'.PHP_EOL;
         echo '---'.PHP_EOL;
-        echo 'DONE - consider running dev/tasks/FixHashes'.PHP_EOL;
+        echo 'DONE - consider running dev/tasks/fix-hashes'.PHP_EOL;
         echo '---'.PHP_EOL;
     }
 }
