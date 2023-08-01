@@ -50,14 +50,14 @@ class ResizeAllImagesTask extends BuildTask
      *
      * @var int px
      */
-    private static $max_width = 1600;
+    private static $max_width = 1300;
 
     /**
      * Image max height - images larger than this height will be downsized
      *
      * @var int px
      */
-    private static $max_height = 1600;
+    private static $max_height = 786;
 
     /**
      * test only?

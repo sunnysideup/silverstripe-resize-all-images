@@ -45,14 +45,13 @@ class ResizeImagesNew extends BuildTask
      */
     private static $segment = 'FixHashes';
 
-    private $dryRun = false;
+    private $dryRun = true;
 
     /**
      * Run
      *
      * @param HTTPRequest $request HTTP request
      *
-     * @return HTTPResponse
      */
     public function run($request)
     {
