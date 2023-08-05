@@ -17,7 +17,7 @@ use SilverStripe\ORM\DB;
 use Sunnysideup\ResizeAllfiles\Api\FileHasher;
 use Sunnysideup\ResizeAssets\ResizeAssetsRunner;
 
-class ResizeImagesNew extends BuildTask
+class FixHashes extends BuildTask
 {
     /**
      * Title
