@@ -14,6 +14,7 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
+use Sunnysideup\ResizeAllfiles\Api\FileHasher;
 use Sunnysideup\ResizeAssets\ResizeAssetsRunner;
 
 class ResizeImagesNew extends BuildTask
@@ -66,38 +67,10 @@ class ResizeImagesNew extends BuildTask
         $this->dryRun = !in_array('--real-run', $_SERVER['argv']);
 
         /** @var Sha1FileHashingService $hasher */
-        $hasher = Injector::inst()->get(FileHashingService::class);
         $imagesIds = Image::get()->columnUnique();
         foreach($imagesIds as $imageID) {
             $image = Image::get()->byID($imageID);
-            $isPublished = $image->isPublished();
-            try {
-                echo 'Fixing '.$image->getFilename().PHP_EOL;
-                $hasher::flush();
-                if($image->isPublished()) {
-                    $fs = AssetStore::VISIBILITY_PUBLIC;
-                } else {
-                    $fs = AssetStore::VISIBILITY_PROTECTED;
-                }
-                $hash = $hasher->computeFromFile($image->getFilename(), $fs);
-                if(! $this->dryRun) {
-                    DB::query('UPDATE "File" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$image->ID);
-                }
-                if($image->isPublished()) {
-                    if(! $this->dryRun) {
-                        DB::query('UPDATE "File_Live" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$image->ID);
-                    }
-                }
-                $image = DataObject::get_by_id(Image::class, $image->ID);
-                if(! $image->exists()) {
-                    echo 'ERROR: hash not fixed yet: '.$image->getFilename().'. Please run task again.' . PHP_EOL;
-                } else {
-                    echo 'SUCCESS: Image exists: '.$image->getFilename() . PHP_EOL;
-                }
-            } catch (Exception $e) {
-                echo $e->getMessage().PHP_EOL;
-            }
-
+            FileHasher::run($image, $this->dryRun, true);
         }
     }
 }
