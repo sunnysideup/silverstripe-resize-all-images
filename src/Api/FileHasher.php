@@ -24,7 +24,7 @@ class FileHasher
         $isPublished = $file->isPublished();
         try {
             if($verbose) {
-                echo 'Fixing '.$file->getFilename().PHP_EOL;
+                echo 'Fixing ('.($dryRun ? 'DRY RUN' : 'FOR REAL').'): '.$file->getFilename().PHP_EOL;
             }
             $hasher::flush();
             if($file->isPublished()) {
@@ -44,9 +44,9 @@ class FileHasher
             $file = DataObject::get_by_id(file::class, $file->ID);
             if($verbose) {
                 if(! $file->exists()) {
-                    echo 'ERROR: hash not fixed yet: '.$file->getFilename().'. Please run task again.' . PHP_EOL;
+                    echo 'ERROR ('.($dryRun ? 'DRY RUN' : 'FOR REAL').'): hash not fixed yet: '.$file->getFilename().'. Please run task again.' . PHP_EOL;
                 } else {
-                    echo 'SUCCESS: file exists: '.$file->getFilename() . PHP_EOL;
+                    echo 'SUCCESS ('.($dryRun ? 'DRY RUN' : 'FOR REAL').'): file exists: '.$file->getFilename() . PHP_EOL;
                 }
             }
         } catch (Exception $e) {
