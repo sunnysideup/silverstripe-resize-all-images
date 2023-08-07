@@ -24,14 +24,14 @@ class FixHashes extends BuildTask
      *
      * @var string
      */
-    protected $title = 'Fix Assets (images) Hashes';
+    protected $title = 'Fix Assets (images) Hashes. Use --for-real to actually fix the hash.';
 
     /**
      * Description
      *
      * @var string
      */
-    protected $description = 'Goes through all images and fixes the hash.';
+    protected $description = 'Goes through all images and fixes the hash. Use --for-real to actually fix the hash.';
 
     /**
      * Enabled

@@ -33,11 +33,11 @@ class FileHasher
                 $fs = AssetStore::VISIBILITY_PROTECTED;
             }
             $hash = $hasher->computeFromFile($file->getFilename(), $fs);
-            if(! $dryRun) {
+            if($dryRun !== true) {
                 DB::query('UPDATE "File" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$file->ID);
             }
             if($file->isPublished()) {
-                if(! $dryRun) {
+                if($dryRun !== true) {
                     DB::query('UPDATE "File_Live" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$file->ID);
                 }
             }
