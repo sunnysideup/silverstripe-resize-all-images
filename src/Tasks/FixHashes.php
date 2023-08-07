@@ -24,14 +24,14 @@ class FixHashes extends BuildTask
      *
      * @var string
      */
-    protected $title = 'Fix Assets (images) Hashes. Use --for-real to actually fix the hash.';
+    protected $title = 'Fix Assets (images) Hashes. Use --for-real to actually fix the hashes.';
 
     /**
      * Description
      *
      * @var string
      */
-    protected $description = 'Goes through all images and fixes the hash. Use --for-real to actually fix the hash.';
+    protected $description = 'Goes through all images and fixes the hash. Use --for-real to actually fix the hashes.';
 
     /**
      * Enabled
@@ -66,8 +66,7 @@ class FixHashes extends BuildTask
 
         $this->dryRun = !in_array('--real-run', $_SERVER['argv']);
 
-        /** @var Sha1FileHashingService $hasher */
-        $imagesIds = Image::get()->columnUnique();
+        $imagesIds = Image::get()->sort(['ID' => 'DESC'])->columnUnique();
         foreach($imagesIds as $imageID) {
             $image = Image::get()->byID($imageID);
             FileHasher::run($image, $this->dryRun, true);

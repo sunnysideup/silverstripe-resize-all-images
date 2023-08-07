@@ -20,8 +20,8 @@ class FileHasher
 {
     public static function run($file, ?bool $dryRun = false, ?bool $verbose = false)
     {
+        /** @var Sha1FileHashingService $hasher */
         $hasher = Injector::inst()->get(FileHashingService::class);
-        $isPublished = $file->isPublished();
         try {
             if($verbose) {
                 echo 'Fixing ('.($dryRun ? 'DRY RUN' : 'FOR REAL').'): '.$file->getFilename().PHP_EOL;
