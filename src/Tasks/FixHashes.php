@@ -61,11 +61,9 @@ class FixHashes extends BuildTask
             exit('Only works in cli');
         }
 
-        echo '---'.PHP_EOL;
-        echo '---'.PHP_EOL;
-
-        $this->dryRun = !in_array('--real-run', $_SERVER['argv']);
-
+        echo '---' . PHP_EOL;
+        echo '---' . PHP_EOL;
+        $this->dryRun = in_array('--for-real', $_SERVER['argv']) ? false : true;
         $imagesIds = Image::get()->sort(['ID' => 'DESC'])->columnUnique();
         foreach($imagesIds as $imageID) {
             $image = Image::get()->byID($imageID);

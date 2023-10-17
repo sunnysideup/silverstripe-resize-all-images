@@ -24,7 +24,7 @@ class FileHasher
         $hasher = Injector::inst()->get(FileHashingService::class);
         try {
             if($verbose) {
-                echo 'Fixing ('.($dryRun ? 'DRY RUN' : 'FOR REAL').'): '.$file->getFilename().PHP_EOL;
+                echo 'Fixing (' . ($dryRun ? 'DRY RUN' : 'FOR REAL') . '): ' . $file->getFilename() . PHP_EOL;
             }
             $hasher::flush();
             if($file->isPublished()) {
@@ -32,26 +32,30 @@ class FileHasher
             } else {
                 $fs = AssetStore::VISIBILITY_PROTECTED;
             }
-            $hash = $hasher->computeFromFile($file->getFilename(), $fs);
+            $name = $file->getFilename();
+            if(! $name) {
+                $name = DB::query('SELECT FileFileName FROM File WHERE ID = ' . $file->ID)->value();
+            }
+            $hash = $hasher->computeFromFile($name, $fs);
             if($dryRun !== true) {
-                DB::query('UPDATE "File" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$file->ID);
+                DB::query('UPDATE "File" SET "Filehash" = \'' . $hash . '\' WHERE "ID" = ' . $file->ID);
             }
             if($file->isPublished()) {
                 if($dryRun !== true) {
-                    DB::query('UPDATE "File_Live" SET "Filehash" = \''.$hash.'\' WHERE "ID" = '.$file->ID);
+                    DB::query('UPDATE "File_Live" SET "Filehash" = \'' . $hash . '\' WHERE "ID" = ' . $file->ID);
                 }
             }
             $file = DataObject::get_by_id(file::class, $file->ID);
             if($verbose) {
                 if(! $file->exists()) {
-                    echo 'ERROR ('.($dryRun ? 'DRY RUN' : 'FOR REAL').'): hash not fixed yet: '.$file->getFilename().'. Please run task again.' . PHP_EOL;
+                    echo 'ERROR (' . ($dryRun ? 'DRY RUN' : 'FOR REAL') . '): hash not fixed yet: ' . $file->getFilename() . '. Please run task again.' . PHP_EOL;
                 } else {
-                    echo 'SUCCESS ('.($dryRun ? 'DRY RUN' : 'FOR REAL').'): file exists: '.$file->getFilename() . PHP_EOL;
+                    echo 'SUCCESS (' . ($dryRun ? 'DRY RUN' : 'FOR REAL') . '): file exists: ' . $file->getFilename() . PHP_EOL;
                 }
             }
         } catch (Exception $e) {
             if($verbose) {
-                echo 'ERROR: '.$e->getMessage().PHP_EOL;
+                echo 'ERROR: ' . $e->getMessage() . PHP_EOL;
             }
         }
 
