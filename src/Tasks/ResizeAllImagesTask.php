@@ -103,7 +103,7 @@ class ResizeAllImagesTask extends BuildTask
         $maxSize = Config::inst()->get(ScaledUploads::class, 'max_size_in_mb') ?: Config::inst()->get(static::class, 'max_size_in_mb');
         $quality = Config::inst()->get(ScaledUploads::class, 'default_quality') ?: Config::inst()->get(static::class, 'default_quality');
         $largeSizeQuality = Config::inst()->get(ScaledUploads::class, 'large_size_default_quality') ?: Config::inst()->get(static::class, 'large_size_default_quality');
-        $dryRun = !in_array('--real-run', $_SERVER['argv']); // Pass --dry-run as an argument to perform a dry run
+        $dryRun = !in_array('--for-real', $_SERVER['argv']); // Pass --dry-run as an argument to perform a dry run
 
         echo "--- DIRECTORY: " . $directory . PHP_EOL;
         echo "--- MAX-WIDTH: " . $maxWidth . PHP_EOL;
@@ -122,7 +122,7 @@ class ResizeAllImagesTask extends BuildTask
 
         echo '---' . PHP_EOL;
         echo '---' . PHP_EOL;
-        echo 'DONE - consider running dev/tasks/fix-hashes --for-real=1' . PHP_EOL;
+        echo 'DONE - consider running dev/tasks/fix-hashes --for-real' . PHP_EOL;
         echo '---' . PHP_EOL;
     }
 }
