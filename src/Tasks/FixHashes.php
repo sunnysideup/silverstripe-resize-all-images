@@ -64,10 +64,11 @@ class FixHashes extends BuildTask
         echo '---' . PHP_EOL;
         echo '---' . PHP_EOL;
         $this->dryRun = in_array('--for-real', $_SERVER['argv']) ? false : true;
+        $verbose = in_array('--verbose', $_SERVER['argv']) ? true : $this->dryRun;
         $imagesIds = Image::get()->sort(['ID' => 'DESC'])->columnUnique();
         foreach($imagesIds as $imageID) {
             $image = Image::get()->byID($imageID);
-            FileHasher::run($image, $this->dryRun, true);
+            FileHasher::run($image, $this->dryRun, $verbose);
         }
     }
 }

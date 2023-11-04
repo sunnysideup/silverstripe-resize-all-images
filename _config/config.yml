@@ -1,3 +1,14 @@
 ---
 Name: resize-all-images
 ---
+Axllent\ScaledUploads\ScaledUploads:
+    max_width: 2800 # Maximum width - default 960
+    max_height: 1867 # Maximum height - default 800
+    # other settings
+    auto_rotate: true # Automatically rotate images that rely on exif information for rotation - default true
+    bypass: false # Bypass (skip) this plugin when uploading - default false
+    force_resampling: false # Force re-saving the image even if it is smaller - default false
+    # custom for this module:
+    max_size_in_mb: 2
+    default_quality: 0.77
+    large_size_default_quality: 0.67
