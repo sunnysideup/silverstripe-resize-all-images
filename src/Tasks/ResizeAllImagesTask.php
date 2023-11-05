@@ -109,8 +109,8 @@ class ResizeAllImagesTask extends BuildTask
         echo "--- MAX-WIDTH: " . $maxWidth . PHP_EOL;
         echo "--- MAX-HEIGHT: " . $maxHeight . PHP_EOL;
         echo "--- MAX-SIZE: " . $maxSize . PHP_EOL;
-        echo "--- MAX-SIZE: " . $quality . PHP_EOL;
-        echo "--- MAX-SIZE: " . $largeSizeQuality . PHP_EOL;
+        echo "--- QUALITY: " . $quality . PHP_EOL;
+        echo "--- LARGE SIZE QUALITY: " . $largeSizeQuality . PHP_EOL;
         echo "--- DRY-RUN: " . ($dryRun ? 'YES' : 'NO') . PHP_EOL;
         // RUN!
 
