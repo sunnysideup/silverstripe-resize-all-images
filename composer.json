@@ -1,6 +1,6 @@
 {
     "name": "sunnysideup/resize-all-images",
-    "description": "Goes through all the files in assets and resizes them to a max with and height",
+    "description": "Goes through all the files in assets and resizes them to a max width and height",
     "type": "silverstripe-vendormodule",
     "keywords": [
         "Silverstripe-CMS",
