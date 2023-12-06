@@ -33,21 +33,21 @@ class FileHasher
                 $fs = AssetStore::VISIBILITY_PROTECTED;
             }
             $name = $file->getFilename();
-            if(! $name) {
+            if(!$name) {
                 $name = DB::query('SELECT FileFileName FROM File WHERE ID = ' . $file->ID)->value();
             }
             $hash = $hasher->computeFromFile($name, $fs);
             if($dryRun !== true) {
                 DB::query('UPDATE "File" SET "Filehash" = \'' . $hash . '\' WHERE "ID" = ' . $file->ID);
             }
-            if($file->isPublished()) {
+            if($file->isPublished() && !$file->isModifiedOnDraft()) {
                 if($dryRun !== true) {
                     DB::query('UPDATE "File_Live" SET "Filehash" = \'' . $hash . '\' WHERE "ID" = ' . $file->ID);
                 }
             }
             $file = DataObject::get_by_id(file::class, $file->ID);
             if($verbose) {
-                if(! $file->exists()) {
+                if(!$file->exists()) {
                     echo 'ERROR (' . ($dryRun ? 'DRY RUN' : 'FOR REAL') . '): hash not fixed yet: ' . $file->getFilename() . '. Please run task again.' . PHP_EOL;
                 } else {
                     echo 'SUCCESS (' . ($dryRun ? 'DRY RUN' : 'FOR REAL') . '): file exists: ' . $file->getFilename() . PHP_EOL;
