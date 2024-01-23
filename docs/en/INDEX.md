@@ -1,5 +1,7 @@
 # How to run it:
 
+Review the settings in the `ResizeAllImagesTask` and adjust using the Silverstripe Config Layer
+
 This only runs from the command line:
 
 ```shell
