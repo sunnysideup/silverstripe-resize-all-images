@@ -36,7 +36,7 @@ class FileHasher
             if(!$name) {
                 $name = DB::query('SELECT FileFileName FROM File WHERE ID = ' . $file->ID)->value();
             }
-            $hash = $hasher->computeFromFile($name, $fs);
+            $hash = $hasher->computeFromFile((string) $name, $fs);
             if($dryRun !== true) {
                 DB::query('UPDATE "File" SET "Filehash" = \'' . $hash . '\' WHERE "ID" = ' . $file->ID);
             }
