@@ -3,18 +3,12 @@
 namespace Sunnysideup\ResizeAllImages\Tasks;
 
 use Axllent\ScaledUploads\ScaledUploads;
-use Exception;
 use SilverStripe\Assets\Image;
-use SilverStripe\Assets\Storage\AssetStore;
-use SilverStripe\Assets\Storage\FileHashingService;
-use SilverStripe\Assets\Storage\Sha1FileHashingService;
 use SilverStripe\Control\Director;
-use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Dev\BuildTask;
-//use SilverStripe\Dev\Tasks\MigrateFileTask;
-use SilverStripe\ORM\DB;
-use Sunnysideup\ResizeAssets\ResizeAssetsRunner;
 use SilverStripe\Core\Config\Config;
+//use SilverStripe\Dev\Tasks\MigrateFileTask;
+use SilverStripe\Dev\BuildTask;
+use Sunnysideup\ResizeAssets\ResizeAssetsRunner;
 
 class ResizeAllImagesTask extends BuildTask
 {
@@ -61,19 +55,16 @@ class ResizeAllImagesTask extends BuildTask
     private static $max_height = 1900;
 
     /**
-     *
      * @var int mb
      */
     private static $max_size_in_mb = 2;
 
     /**
-     *
      * @var float
      */
     private static $default_quality = 0.77;
 
     /**
-     *
      * @var float
      */
     private static $large_size_default_quality = 0.67;
@@ -87,15 +78,12 @@ class ResizeAllImagesTask extends BuildTask
      */
     public function run($request)
     {
-
-
-        if (!Director::is_cli()) {
+        if (! Director::is_cli()) {
             exit('Only works in cli');
         }
 
         echo '---' . PHP_EOL;
         echo '---' . PHP_EOL;
-
 
         $directory = ASSETS_PATH;
         $maxWidth = Config::inst()->get(ScaledUploads::class, 'max_width') ?: Config::inst()->get(static::class, 'max_width');
@@ -103,15 +91,15 @@ class ResizeAllImagesTask extends BuildTask
         $maxSize = Config::inst()->get(ScaledUploads::class, 'max_size_in_mb') ?: Config::inst()->get(static::class, 'max_size_in_mb');
         $quality = Config::inst()->get(ScaledUploads::class, 'default_quality') ?: Config::inst()->get(static::class, 'default_quality');
         $largeSizeQuality = Config::inst()->get(ScaledUploads::class, 'large_size_default_quality') ?: Config::inst()->get(static::class, 'large_size_default_quality');
-        $dryRun = !in_array('--for-real', $_SERVER['argv']); // Pass --dry-run as an argument to perform a dry run
+        $dryRun = ! in_array('--for-real', $_SERVER['argv']); // Pass --dry-run as an argument to perform a dry run
 
-        echo "--- DIRECTORY: " . $directory . PHP_EOL;
-        echo "--- MAX-WIDTH: " . $maxWidth . PHP_EOL;
-        echo "--- MAX-HEIGHT: " . $maxHeight . PHP_EOL;
-        echo "--- MAX-SIZE: " . $maxSize . PHP_EOL;
-        echo "--- QUALITY: " . $quality . PHP_EOL;
-        echo "--- LARGE SIZE QUALITY: " . $largeSizeQuality . PHP_EOL;
-        echo "--- DRY-RUN: " . ($dryRun ? 'YES' : 'NO') . PHP_EOL;
+        echo '--- DIRECTORY: ' . $directory . PHP_EOL;
+        echo '--- MAX-WIDTH: ' . $maxWidth . PHP_EOL;
+        echo '--- MAX-HEIGHT: ' . $maxHeight . PHP_EOL;
+        echo '--- MAX-SIZE: ' . $maxSize . PHP_EOL;
+        echo '--- QUALITY: ' . $quality . PHP_EOL;
+        echo '--- LARGE SIZE QUALITY: ' . $largeSizeQuality . PHP_EOL;
+        echo '--- DRY-RUN: ' . ($dryRun ? 'YES' : 'NO') . PHP_EOL;
         // RUN!
 
         ResizeAssetsRunner::set_max_file_size_in_mb($maxSize);
