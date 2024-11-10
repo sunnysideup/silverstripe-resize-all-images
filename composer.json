@@ -13,7 +13,7 @@
     ],
     "require": {
         "silverstripe/framework": "^4 ||^5",
-        "axllent/silverstripe-scaled-uploads": "^2"
+        "axllent/silverstripe-scaled-uploads": "dev-master"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
