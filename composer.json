@@ -13,7 +13,6 @@
     ],
     "require": {
         "silverstripe/framework": "^4 ||^5",
-        "sunnysideup/resize-assets": "dev-main",
         "axllent/silverstripe-scaled-uploads": "^2"
     },
     "minimum-stability": "dev",
@@ -30,5 +29,11 @@
         "psr-4": {
             "Sunnysideup\\ResizeAllImages\\": "src/"
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/sunnysideup/silverstripe-scaled-uploads.git"
+        }
+    ]
 }

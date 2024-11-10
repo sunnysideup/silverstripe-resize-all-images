@@ -1,19 +1,23 @@
 <?php
 
-namespace Sunnysideup\ResizeAllfiles\Api;
+namespace Sunnysideup\ResizeAllImages\Api;
 
 use Exception;
-use SilverStripe\Assets\file;
+use SilverStripe\Assets\File;
+use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Assets\Storage\Sha1FileHashingService;
+use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 
 class FileHasher
 {
-    public static function run($file, ?bool $dryRun = false, ?bool $verbose = false)
+    use Injectable;
+
+    public function run(File $file, ?bool $dryRun = false, ?bool $verbose = false)
     {
         /** @var Sha1FileHashingService $hasher */
         $hasher = Injector::inst()->get(FileHashingService::class);
@@ -38,7 +42,7 @@ class FileHasher
             if ($file->isPublished() && ! $file->isModifiedOnDraft() && $dryRun !== true) {
                 DB::query('UPDATE "File_Live" SET "Filehash" = \'' . $hash . '\' WHERE "ID" = ' . $file->ID);
             }
-            $file = DataObject::get_by_id(file::class, $file->ID);
+            $file = Image::get()->byID($file->ID);
             if ($verbose) {
                 if (! $file->exists()) {
                     echo 'ERROR (' . ($dryRun ? 'DRY RUN' : 'FOR REAL') . '): hash not fixed yet: ' . $file->getFilename() . '. Please run task again.' . PHP_EOL;
@@ -52,4 +56,5 @@ class FileHasher
             }
         }
     }
+
 }

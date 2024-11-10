@@ -25,13 +25,6 @@ class FixHashes extends BuildTask
     protected $description = 'Goes through all images and fixes the hash. Use --for-real to actually fix the hashes.';
 
     /**
-     * Enabled
-     *
-     * @var mixed
-     */
-    protected $enabled = true;
-
-    /**
      * Segment URL
      *
      * @var string
@@ -53,12 +46,17 @@ class FixHashes extends BuildTask
 
         echo '---' . PHP_EOL;
         echo '---' . PHP_EOL;
-        $this->dryRun = ! in_array('--for-real', $_SERVER['argv']);
-        $verbose = in_array('--verbose', $_SERVER['argv']) ? true : $this->dryRun;
+        $options = getopt('', ['for-real', 'verbose']);
+        $this->dryRun = ! isset($options['for-real']);
+        $verbose = isset($options['verbose']) ? true : $this->dryRun;
         $imagesIds = Image::get()->sort(['ID' => 'DESC'])->columnUnique();
+        $hasher = FileHasher::create();
         foreach ($imagesIds as $imageID) {
             $image = Image::get()->byID($imageID);
-            FileHasher::run($image, $this->dryRun, $verbose);
+            $hasher->run($image, $this->dryRun, $verbose);
         }
+        echo '---' . PHP_EOL;
+        echo 'DONE' . PHP_EOL;
+        echo '---' . PHP_EOL;
     }
 }
