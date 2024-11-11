@@ -13,15 +13,9 @@ class ResizeAssetsRunner extends Resizer
 
     protected bool $useGd = false;
 
-    protected bool $dryRun = false;
 
-    protected bool $verbose = false;
+    protected FileHasher $hasher;
 
-    public function setDryRun(?bool $dryRun = true): static
-    {
-        $this->dryRun = $dryRun;
-        return $this;
-    }
 
     public function setGdAsConverter()
     {
@@ -30,22 +24,16 @@ class ResizeAssetsRunner extends Resizer
         return $this;
     }
 
-    public function setVerbose(?bool $verbose = true): static
-    {
-        $this->verbose = $verbose;
-        return $this;
-    }
-
     protected function __construct()
     {
         $this->getImageResizerLib();
+        $this->hasher = FileHasher::create();
         parent::__construct();
 
     }
 
     public function runFromFilesystemFileOuter(SplFileInfo $file): void
     {
-        $hasher = FileHasher::create();
         $oldPath = $file->getPathname();
         $dbImage = $this->getDbImageFromPath($oldPath);
         try {
@@ -63,7 +51,7 @@ class ResizeAssetsRunner extends Resizer
         }
         $newDbImage = $this->getDbImageFromPath($newFilePath);
 
-        $hasher->run($newDbImage, $this->dryRun, true);
+        $this->hasher->run($newDbImage, $this->dryRun, true);
     }
 
     public function runFromFilesystemFile(SplFileInfo $file): string|null
@@ -168,7 +156,7 @@ class ResizeAssetsRunner extends Resizer
                     }
                 }
 
-                $sizeCheck = $this->isFileSizeGreaterThan($path);
+                $sizeCheck = $this->fileIsTooBig($path);
                 $step = 1;
                 while ($sizeCheck && $step > 0) {
                     if ($this->dryRun) {
@@ -193,7 +181,7 @@ class ResizeAssetsRunner extends Resizer
                                 imagewebp($newImage, $path, $webpQuality);
                                 break;
                         }
-                        $sizeCheck = $this->isFileSizeGreaterThan($path);
+                        $sizeCheck = $this->fileIsTooBig($path);
                         if (! $quality) {
                             $quality = $this->quality;
                             if (!$quality) {

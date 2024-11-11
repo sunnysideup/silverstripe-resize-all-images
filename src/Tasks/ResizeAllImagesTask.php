@@ -2,6 +2,7 @@
 
 namespace Sunnysideup\ResizeAllImages\Tasks;
 
+use Axllent\ScaledUploads\Api\Resizer;
 use Axllent\ScaledUploads\ScaledUploads;
 use Exception;
 use RecursiveDirectoryIterator;
@@ -40,38 +41,54 @@ class ResizeAllImagesTask extends BuildTask
      */
     private static $segment = 'resize-all-images';
 
+    protected $useFilesystem = false;
+
 
     /**
      * Run
      *
      * @param HTTPRequest $request HTTP request
      *
-     * @return HTTPResponse
      */
     public function run($request)
     {
         if (! Director::is_cli()) {
             exit('Only works in cli');
         }
-        $options = getopt('', ['for-real', ]);
         echo '---' . PHP_EOL;
+        echo 'START' . PHP_EOL;
         echo '---' . PHP_EOL;
-
         $directory = ASSETS_PATH;
-        $dryRun = ! isset($options['for-real']); // Pass --dry-run as an argument to perform a dry run
+        $dryRun = !isset($_GET['for-real']);
 
 
         // RUN!
-        $runner = ResizeAssetsRunner::create();
-        $runner->setDryRun($dryRun);
-        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory), RecursiveIteratorIterator::SELF_FIRST);
-
-        foreach ($files as $file) {
-            $runner->runFromFilesystemFileOuter($file);
+        if ($this->useFilesystem) {
+            /**
+             * @var runFromFilesystemFileOuter $runner
+             */
+            $runner = ResizeAssetsRunner::create();
+            $runner->setDryRun($dryRun);
+            $runner->setVerbose(true);
+            $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory), RecursiveIteratorIterator::SELF_FIRST);
+            foreach ($files as $file) {
+                $runner->runFromFilesystemFileOuter($file);
+            }
+        } else {
+            $runner = Resizer::create();
+            $runner->setDryRun($dryRun);
+            $runner->setVerbose(true);
+            $imagesIds = Image::get()->sort(['ID' => 'DESC'])->columnUnique();
+            foreach ($imagesIds as $imageID) {
+                $image = Image::get()->byID($imageID);
+                if ($image->exists()) {
+                    $runner->runFromDbFile($image);
+                }
+            }
         }
         echo '---' . PHP_EOL;
         echo '---' . PHP_EOL;
-        echo 'DONE - consider running dev/tasks/fix-hashes --for-real' . PHP_EOL;
+        echo 'DONE - consider running dev/tasks/fix-hashes --for-real=1' . PHP_EOL;
         echo '---' . PHP_EOL;
     }
 }
