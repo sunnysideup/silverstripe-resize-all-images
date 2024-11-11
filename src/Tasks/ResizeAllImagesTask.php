@@ -3,6 +3,9 @@
 namespace Sunnysideup\ResizeAllImages\Tasks;
 
 use Axllent\ScaledUploads\ScaledUploads;
+use Exception;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use SilverStripe\Assets\Image;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
@@ -10,6 +13,8 @@ use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Config\Config;
 //use SilverStripe\Dev\Tasks\MigrateFileTask;
 use SilverStripe\Dev\BuildTask;
+use SplFileInfo;
+use Sunnysideup\ResizeAllImages\Api\FileHasher;
 use Sunnysideup\ResizeAllImages\Api\ResizeAssetsRunner;
 
 class ResizeAllImagesTask extends BuildTask
@@ -58,10 +63,12 @@ class ResizeAllImagesTask extends BuildTask
 
         // RUN!
         $runner = ResizeAssetsRunner::create();
+        $runner->setDryRun($dryRun);
+        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory), RecursiveIteratorIterator::SELF_FIRST);
 
-
-        $runner->run($directory, $dryRun, true);
-
+        foreach ($files as $file) {
+            $runner->runFromFilesystemFileOuter($file);
+        }
         echo '---' . PHP_EOL;
         echo '---' . PHP_EOL;
         echo 'DONE - consider running dev/tasks/fix-hashes --for-real' . PHP_EOL;

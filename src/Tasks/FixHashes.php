@@ -6,7 +6,7 @@ use SilverStripe\Assets\Image;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Dev\BuildTask;
-use Sunnysideup\ResizeAllfiles\Api\FileHasher;
+use Sunnysideup\ResizeAllImages\Api\FileHasher;
 
 class FixHashes extends BuildTask
 {
@@ -46,14 +46,13 @@ class FixHashes extends BuildTask
 
         echo '---' . PHP_EOL;
         echo '---' . PHP_EOL;
-        $options = getopt('', ['for-real', 'verbose']);
+        $options = getopt('', ['for-real']);
         $this->dryRun = ! isset($options['for-real']);
-        $verbose = isset($options['verbose']) ? true : $this->dryRun;
         $imagesIds = Image::get()->sort(['ID' => 'DESC'])->columnUnique();
         $hasher = FileHasher::create();
         foreach ($imagesIds as $imageID) {
             $image = Image::get()->byID($imageID);
-            $hasher->run($image, $this->dryRun, $verbose);
+            $hasher->run($image, $this->dryRun, true);
         }
         echo '---' . PHP_EOL;
         echo 'DONE' . PHP_EOL;

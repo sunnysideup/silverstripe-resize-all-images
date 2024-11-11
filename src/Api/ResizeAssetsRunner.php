@@ -2,64 +2,24 @@
 
 namespace Sunnysideup\ResizeAllImages\Api;
 
-use Axllent\ScaledUploads\ScaledUploads;
+use Axllent\ScaledUploads\Api\Resizer;
 use Exception;
-use Imagick;
-use SilverStripe\Core\Injector\Injectable;
 use SplFileInfo;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use SilverStripe\Assets\Image;
-use SilverStripe\Assets\Storage\AssetStore;
-use SilverStripe\Assets\Storage\FileHashingService;
-use SilverStripe\Assets\Storage\Sha1FileHashingService;
-use SilverStripe\Core\Config\Config;
-use SilverStripe\Core\Injector\Injector;
-use SilverStripe\ORM\DB;
 
-class ResizeAssetsRunner
+class ResizeAssetsRunner extends Resizer
 {
-    use Injectable;
-
     protected bool $useImagick = false;
 
     protected bool $useGd = false;
 
-    protected array $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    protected bool $dryRun = false;
 
-    protected array $patternsToSkip = [];
+    protected bool $verbose = false;
 
-    protected float $maxFileSizeInMb = 1;
-
-    protected float $maxWidth = 2800;
-    protected float $maxHeight = 1200;
-    protected float $quality = 0.77;
-
-    protected bool $alsoConvertToWebP = true;
-
-    /**
-     * When trying to get in range for size, we keep reducing the quality by this step.
-     * Until the image is small enough.
-     * @var float
-     */
-    protected float $quality_reduction_step = 0.1;
-
-    public function setImagickAsConverter(): static
+    public function setDryRun(?bool $dryRun = true): static
     {
-        $this->useImagick = true;
-        $this->useGd = false;
-        return $this;
-    }
-
-    public function setImageExtensions(array $array): static
-    {
-        $this->imageExtensions = $array;
-        return $this;
-    }
-
-    public function setPatternsToSkip(array $array): static
-    {
-        $this->patternsToSkip = $array;
+        $this->dryRun = $dryRun;
         return $this;
     }
 
@@ -70,111 +30,45 @@ class ResizeAssetsRunner
         return $this;
     }
 
-    public function setMaxFileSizeInMb(null|float|int $maxFileSizeInMb = 2): static
+    public function setVerbose(?bool $verbose = true): static
     {
-        $this->maxFileSizeInMb = $maxFileSizeInMb;
-        return $this;
-    }
-
-    public function setMaxWidth(?float $maxWidth = 2800): static
-    {
-        $this->maxWidth = $maxWidth;
-        return $this;
-    }
-    public function setMaxHeight(?float $maxHeight = 1200): static
-    {
-        $this->maxHeight = $maxHeight;
-        return $this;
-    }
-
-    public function setQuality(?float $quality = 0.77): static
-    {
-        $this->quality = $quality;
-        return $this;
-    }
-
-    public function setAlsoConvertToWebP(?bool $alsoConvertToWebP): static
-    {
-        $this->alsoConvertToWebP = $alsoConvertToWebP;
-        return $this;
-    }
-
-    public function setQualityReductionStep(?float $quality_reduction_step = 0.1): static
-    {
-        $this->quality_reduction_step = $quality_reduction_step;
+        $this->verbose = $verbose;
         return $this;
     }
 
     protected function __construct()
     {
         $this->getImageResizerLib();
-        $this->maxWidth = Config::inst()->get(ScaledUploads::class, 'max_width');
-        $this->maxHeight = Config::inst()->get(ScaledUploads::class, 'max_height');
-        $this->maxFileSizeInMb = Config::inst()->get(ScaledUploads::class, 'max_size_in_mb');
-        $this->quality = Config::inst()->get(ScaledUploads::class, 'default_quality');
-        $this->alsoConvertToWebP = Config::inst()->get(static::class, 'also_convert_to_webp');
+        parent::__construct();
 
     }
 
-    /**
-     * e.g. providing `['___']` will exclude all files with `___` in them.
-     */
-    public function patternsToSkip(array $array)
+    public function runFromFilesystemFileOuter(SplFileInfo $file): void
     {
-        $this->patternsToSkip = $array;
-    }
-
-    public function run(string $fullDirPath, ?bool $dryRun = true, ?bool $verbose = true)
-    {
-
-        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($fullDirPath), RecursiveIteratorIterator::SELF_FIRST);
         $hasher = FileHasher::create();
-        foreach ($files as $file) {
-            if (in_array(strtolower($file->getExtension()), $this->imageExtensions)) {
-                foreach ($this->patternsToSkip as $pattern) {
-                    if (strpos($file, $pattern) !== false) {
-                        continue 2;
-                    }
-                }
-                $oldPath = $file->getPathname();
-                $oldImage = $this->getDbImageFromPath($oldPath);
-                try {
-                    $newFilePath = $this->resizeImageToSizeAndDimensions(
-                        $file->getPathname(),
-                        $dryRun,
-                        $verbose,
-                    );
-                } catch (Exception $e) {
-                    echo 'ERROR! ' . print_r($file, 1) . ' could not be resized!' . PHP_EOL;
-                    continue;
-                }
-                if ($newFilePath) {
-
-                    $file = new SplFileInfo($newFilePath);
-                    $oldImage->setFromLocalFile($newFilePath);
-                    $isPublished = $oldImage->isPublished();
-                    $oldImage->write();
-                    if ($isPublished) {
-                        $oldImage->publishSingle();
-                    }
-                } else {
-                    $newFilePath = $oldPath;
-                }
-                $newDbImage = $this->getDbImageFromPath($newFilePath);
-                if (!$newDbImage || !$newDbImage->exists()) {
-                    echo 'ERROR! ' . $file . ' is not in the database!' . PHP_EOL;
-                    $newDbImage = Image::create();
-                    $newDbImage->setFromLocalFile($newFilePath);
-                    $newDbImage->write();
-                    $newDbImage->publishSingle();
-                }
-                $hasher->run($newDbImage, $dryRun, $dryRun);
-            }
+        $oldPath = $file->getPathname();
+        $dbImage = $this->getDbImageFromPath($oldPath);
+        try {
+            $newFilePath = $this->runFromFilesystemFile($file);
+        } catch (Exception $e) {
+            echo 'ERROR! ' . print_r($file, 1) . ' could not be resized!' . PHP_EOL;
+            return;
         }
+        if ($newFilePath) {
+            $file = new SplFileInfo($newFilePath);
+            $dbImage->setFromLocalFile($newFilePath, $dbImage->getFilename());
+            $this->saveAndPublish($dbImage);
+        } else {
+            $newFilePath = $oldPath;
+        }
+        $newDbImage = $this->getDbImageFromPath($newFilePath);
+
+        $hasher->run($newDbImage, $this->dryRun, true);
     }
 
-    public function resizeImageToSizeAndDimensions(SplFileInfo $file, ?bool $dryRun = true, ?bool $verbose = true): string|null
+    public function runFromFilesystemFile(SplFileInfo $file): string|null
     {
+
         $needsResize = true;
         $retunValue = null;
         $quality = $this->quality;
@@ -192,6 +86,10 @@ class ResizeAssetsRunner
         // Get path without extension
         $pathInfo = pathinfo($path);
         $pathWithoutExtension = $pathInfo['dirname'] . '/' . $pathInfo['filename'];
+        $extension = $pathInfo['extension'];
+        if (! $this->canBeConverted($path, $extension)) {
+            return null;
+        }
 
         if ($width <= $this->maxWidth && $height <= $this->maxHeight) {
             $newWidth = $width;
@@ -228,8 +126,8 @@ class ResizeAssetsRunner
             if ($sourceImage) {
                 if ($needsResize) {
                     // Resize the image
-                    if (! $dryRun) {
-                        if ($dryRun) {
+                    if (! $this->dryRun) {
+                        if ($this->dryRun) {
                             echo "-- DRY RUN: $path ({$width}x{$height}) resize to {$newWidth}x{$newHeight}" . PHP_EOL;
                         }
                         //set up the image object only
@@ -243,13 +141,13 @@ class ResizeAssetsRunner
                 }
                 imagedestroy($sourceImage);
                 unset($sourceImage);
-                if ($this->alsoConvertToWebP) {
+                if ($this->useWebp) {
                     if ($mimeType !== 'image/webp') {
                         $webpImagePath = $pathWithoutExtension . '.webp';
                         if (file_exists($webpImagePath)) {
                             echo 'WebP already exists: ' . $webpImagePath . PHP_EOL;
                         } else {
-                            if ($dryRun) {
+                            if ($this->dryRun) {
                                 echo '-- DRY RUN: Would create WebP: ' . $webpImagePath . PHP_EOL;
                             } else {
                                 // Convert to WebP and save
@@ -273,7 +171,7 @@ class ResizeAssetsRunner
                 $sizeCheck = $this->isFileSizeGreaterThan($path);
                 $step = 1;
                 while ($sizeCheck && $step > 0) {
-                    if ($dryRun) {
+                    if ($this->dryRun) {
                         echo '-- DRY RUN: Would reduce quality to ' . $quality . PHP_EOL;
                         $step = 0;
                     } else {
@@ -291,7 +189,7 @@ class ResizeAssetsRunner
                                 imagegif($newImage, $path);
                                 break;
                             case 'image/webp':
-                                $webpQuality = $quality ? round($quality * 99 * $step) : -1;
+                                $webpQuality = $quality ? round($quality * 100 * $step) : -1;
                                 imagewebp($newImage, $path, $webpQuality);
                                 break;
                         }
@@ -302,7 +200,7 @@ class ResizeAssetsRunner
                                 $quality = 0.77;
                             }
                         }
-                        $step -= $this->quality_reduction_step;
+                        $step -= $this->qualityReductionIncrement;
                     }
                 }
                 // Free up memory
@@ -333,29 +231,20 @@ class ResizeAssetsRunner
         }
     }
 
-    protected function isFileSizeGreaterThan(string $filePath): ?float
-    {
-        $fileSize = filesize($filePath);
-        $maxSize = $this->maxFileSizeInMb * 1024 * 1024;
-        if ($fileSize > $maxSize) {
-            return round(($fileSize - $maxSize) / $maxSize * 100);
-        }
-        return null;
-    }
-
-    protected function getOutputPath(string $path): string
-    {
-        return strtolower(pathinfo($path, PATHINFO_EXTENSION));
-    }
-
     protected function getDbImageFromPath(string $path): ?Image
     {
         $dbPath = str_replace(ASSETS_PATH, '', $path);
-        return Image::get()->filter(['File.Filename' => $dbPath])->first();
+        $newDbImage = Image::get()->filter(['File.Filename' => $dbPath])->first();
+        if (!$newDbImage || !$newDbImage->exists()) {
+            echo 'ERROR! ' . $path . ' is not in the database!' . PHP_EOL;
+            $newDbImage = Image::create();
+            $newDbImage->setFromLocalFile($path, $dbPath);
+            $newDbImage->write();
+            $newDbImage->publishSingle();
+        }
+        return $newDbImage;
 
     }
-
-
 }
 
 
