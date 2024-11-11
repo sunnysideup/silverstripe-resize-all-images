@@ -13,9 +13,18 @@ class ResizeAssetsRunner extends Resizer
 
     protected bool $useGd = false;
 
+    protected array $imageExtensions;
+
 
     protected FileHasher $hasher;
 
+    private static array $image_extensions = [
+        'jpg',
+        'jpeg',
+        'png',
+        'gif',
+        'webp',
+    ];
 
     public function setGdAsConverter()
     {
@@ -24,11 +33,18 @@ class ResizeAssetsRunner extends Resizer
         return $this;
     }
 
+    public function setImageExtensions(array $array): static
+    {
+        $this->imageExtensions = $array;
+        return $this;
+    }
+
     protected function __construct()
     {
+        parent::__construct();
+        $this->imageExtensions = $this->config()->get('image_extensions');
         $this->getImageResizerLib();
         $this->hasher = FileHasher::create();
-        parent::__construct();
 
     }
 
