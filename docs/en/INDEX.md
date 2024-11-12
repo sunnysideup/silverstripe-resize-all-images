@@ -2,7 +2,7 @@
 
 Firstly, review [Resizing Module](https://github.com/sunnysideup/silverstripe-scaled-uploads/) and set up the right configuration. 
 
-This only runs from the command line:
+Then run the command listed below.  Firstly do a dry run and review the results. This only runs from the command line:
 
 ```shell
 
