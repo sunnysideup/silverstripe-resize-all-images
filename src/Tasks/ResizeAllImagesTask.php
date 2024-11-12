@@ -3,19 +3,15 @@
 namespace Sunnysideup\ResizeAllImages\Tasks;
 
 use Axllent\ScaledUploads\Api\Resizer;
-use Axllent\ScaledUploads\ScaledUploads;
 use Exception;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SilverStripe\Assets\Image;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
-use SilverStripe\Control\HTTPResponse;
-use SilverStripe\Core\Config\Config;
 //use SilverStripe\Dev\Tasks\MigrateFileTask;
 use SilverStripe\Dev\BuildTask;
 use SplFileInfo;
-use Sunnysideup\ResizeAllImages\Api\FileHasher;
 use Sunnysideup\ResizeAllImages\Api\ResizeAssetsRunner;
 
 class ResizeAllImagesTask extends BuildTask
@@ -65,19 +61,19 @@ class ResizeAllImagesTask extends BuildTask
         // RUN!
         if ($this->useFilesystem) {
             /**
-             * @var runFromFilesystemFileOuter $runner
+             * @var ResizeAssetsRunner $runner
              */
-            $runner = ResizeAssetsRunner::create();
-            $runner->setDryRun($dryRun);
-            $runner->setVerbose(true);
+            $runner = ResizeAssetsRunner::create()
+                ->setDryRun($dryRun)
+                ->setVerbose(true);
             $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory), RecursiveIteratorIterator::SELF_FIRST);
             foreach ($files as $file) {
                 $runner->runFromFilesystemFileOuter($file);
             }
         } else {
-            $runner = Resizer::create();
-            $runner->setDryRun($dryRun);
-            $runner->setVerbose(true);
+            $runner = Resizer::create()
+                ->setDryRun($dryRun)
+                ->setVerbose(true);
             $imagesIds = Image::get()->sort(['ID' => 'DESC'])->columnUnique();
             foreach ($imagesIds as $imageID) {
                 $image = Image::get()->byID($imageID);
