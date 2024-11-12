@@ -1,5 +1,7 @@
 # How to run it:
 
+Firstly, review [Resizing Module](https://github.com/sunnysideup/silverstripe-scaled-uploads/) and set up the right configuration. 
+
 This only runs from the command line:
 
 ```shell
