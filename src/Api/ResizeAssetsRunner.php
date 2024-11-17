@@ -6,6 +6,7 @@ use Axllent\ScaledUploads\Api\Resizer;
 use Exception;
 use SplFileInfo;
 use SilverStripe\Assets\Image;
+use Imagick;
 
 class ResizeAssetsRunner extends Resizer
 {
@@ -106,8 +107,87 @@ class ResizeAssetsRunner extends Resizer
         }
 
         if ($this->useImagick) {
-            user_error('You will have to manually run imagick.');
-            return null;
+            /** @phpcs-ignore-next-line */
+            $imagick = new Imagick($path);
+            $mimeType = $imagick->getImageMimeType();
+
+            if ($needsResize) {
+                if ($this->dryRun) {
+                    echo "-- DRY RUN: $path ({$width}x{$height}) resize to {$newWidth}x{$newHeight}" . PHP_EOL;
+                } else {
+                    // Resize the image
+                    /** @phpcs-ignore-next-line */
+                    $imagick->resizeImage($newWidth, $newHeight, Imagick::FILTER_LANCZOS, 1);
+                }
+            }
+
+            if ($this->useWebp) {
+                if ($mimeType !== 'image/webp') {
+                    $webpImagePath = $pathWithoutExtension . '.webp';
+                    if (file_exists($webpImagePath)) {
+                        echo 'WebP already exists: ' . $webpImagePath . PHP_EOL;
+                    } else {
+                        if ($this->dryRun) {
+                            echo '-- DRY RUN: Would create WebP: ' . $webpImagePath . PHP_EOL;
+                        } else {
+                            // Convert to WebP and save
+                            $imagick->setImageFormat('webp');
+                            $imagick->writeImage($webpImagePath);
+
+                            // Check if WebP is smaller
+                            if (filesize($webpImagePath) < filesize($path)) {
+                                unlink($path); // Delete original image
+                                $returnValue = $webpImagePath;
+                                $path = $webpImagePath;
+                                $imagick->readImage($webpImagePath);
+                                $mimeType = 'image/webp';
+                            } else {
+                                unlink($webpImagePath); // Delete WebP image as it is bigger
+                            }
+                        }
+                    }
+                }
+            }
+
+            $sizeCheck = $this->fileIsTooBig($path);
+            $step = 1;
+            while ($sizeCheck && $step > 0) {
+                if ($this->dryRun) {
+                    echo '-- DRY RUN: Would reduce quality to ' . $quality . PHP_EOL;
+                    $step = 0;
+                } else {
+                    // Reduce the quality and save the image
+                    $outputQuality = $quality ? round($quality * 100 * $step) : 77; // Default to 77 if not set
+                    $imagick->setImageCompressionQuality($outputQuality);
+
+                    switch ($mimeType) {
+                        case 'image/jpeg':
+                            $imagick->setImageFormat('jpeg');
+                            break;
+                        case 'image/png':
+                            $imagick->setImageFormat('png');
+                            break;
+                        case 'image/gif':
+                            $imagick->setImageFormat('gif');
+                            break;
+                        case 'image/webp':
+                            $imagick->setImageFormat('webp');
+                            break;
+                    }
+
+                    $imagick->writeImage($path);
+                    $sizeCheck = $this->fileIsTooBig($path);
+
+                    if (!$quality) {
+                        $quality = $this->quality ?: 0.77;
+                    }
+                    $step -= $this->qualityReductionIncrement;
+                }
+            }
+
+            // Free up memory
+            $imagick->clear();
+            $imagick->destroy();
         } elseif ($this->useGd) {
 
             // Load the image
@@ -226,10 +306,10 @@ class ResizeAssetsRunner extends Resizer
             return;
         }
         // preferred...
-        if (extension_loaded('gd')) {
-            $this->useGd = true;
-        } elseif (extension_loaded('imagick')) {
+        if (extension_loaded('imagick')) {
             $this->useImagick = true;
+        } elseif (extension_loaded('gd')) {
+            $this->useGd = true;
         } else {
             exit("Error: Neither Imagick nor GD is installed.\n");
         }
@@ -250,60 +330,3 @@ class ResizeAssetsRunner extends Resizer
 
     }
 }
-
-
-
-// KEEP!
-// KEEP!
-// KEEP!
-// KEEP!
-// KEEP!
-// /** @var \Imagick $Image */
-// $image = new \Imagick($img);
-// $image->resizeImage($newWidth, $newHeight, Imagick::FILTER_LANCZOS, 1);
-// $outputFormat = $this->getOutputPath($path);
-// try {
-
-//     // Set the compression quality for JPEG
-//     if ($outputFormat === 'jpeg' || $outputFormat === 'jpg') {
-//         $jpgQuality = round($quality * 99);
-//         $image->setImageCompression(Imagick::COMPRESSION_JPEG);
-//         $image->setImageCompressionQuality($jpgQuality);
-//     }
-
-//     // Set the format to PNG for output if needed
-//     if ($outputFormat === 'png') {
-//         $pngQuality = round($quality * 9);
-//         $image->setImageFormat('png');
-//         $image->setImageCompressionQuality($pngQuality);
-//     }
-
-//     // For GIF, you may want to handle animations
-//     if ($outputFormat === 'gif') {
-//         $image = $image->coalesceImages();
-//         foreach ($image as $frame) {
-//             $frame->resizeImage($newWidth, $newHeight, Imagick::FILTER_LANCZOS, 1);
-//             $frame->setImageCompressionQuality($quality);
-//         }
-//         $imagick = $image->deconstructImages();
-//         $imagick->setImageFormat('gif');
-//     }
-
-//     // Write the image back to the file
-//     $image->writeImages($path, true);
-
-//     // Clear memory
-//     $imagick->clear();
-//     $imagick->destroy();
-
-//     return true;
-// } catch (ImagickException $e) {
-//     error_log("An error occurred while compressing the image: " . $e->getMessage());
-//     return false;
-// }
-
-// KEEP!
-// KEEP!
-// KEEP!
-// KEEP!
-// KEEP!
