@@ -2,7 +2,7 @@
 
 namespace Sunnysideup\ResizeAllImages\Api;
 
-use Axllent\ScaledUploads\Api\Resizer;
+use Sunnysideup\ScaledUploads\Api\Resizer;
 use Exception;
 use SplFileInfo;
 use SilverStripe\Assets\Image;
