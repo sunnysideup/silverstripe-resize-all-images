@@ -57,7 +57,6 @@ class ResizeAllImagesTask extends BuildTask
         $directory = ASSETS_PATH;
         $dryRun = !isset($_GET['for-real']);
 
-
         // RUN!
         if ($this->useFilesystem) {
             /**
@@ -66,6 +65,7 @@ class ResizeAllImagesTask extends BuildTask
             $runner = ResizeAssetsRunner::create()
                 ->setDryRun($dryRun)
                 ->setVerbose(true);
+            $this->outputVars($runner);
             $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory), RecursiveIteratorIterator::SELF_FIRST);
             foreach ($files as $file) {
                 $runner->runFromFilesystemFileOuter($file);
@@ -74,17 +74,23 @@ class ResizeAllImagesTask extends BuildTask
             $runner = Resizer::create()
                 ->setDryRun($dryRun)
                 ->setVerbose(true);
+            $this->outputVars($runner);
             $imagesIds = Image::get()->sort(['ID' => 'DESC'])->columnUnique();
             foreach ($imagesIds as $imageID) {
                 $image = Image::get()->byID($imageID);
-                if ($image->exists()) {
+                if ($image->isPublished()) {
                     $runner->runFromDbFile($image);
                 }
             }
         }
         echo '---' . PHP_EOL;
         echo '---' . PHP_EOL;
-        echo 'DONE - consider running dev/tasks/fix-hashes --for-real=1' . PHP_EOL;
+        echo 'DONE - consider running vendor/bin/sake dev/tasks/fix-hashes --for-real=1' . PHP_EOL;
         echo '---' . PHP_EOL;
+    }
+
+    protected function outputVars($runner)
+    {
+        print_r($runner->getAllProperties());
     }
 }

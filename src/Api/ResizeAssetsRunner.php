@@ -108,7 +108,7 @@ class ResizeAssetsRunner extends Resizer
 
         if ($this->useImagick) {
             /** @phpcs-ignore-next-line */
-            $imagick = new \Imagick($path);
+            $imagick = new Imagick($path);
             $mimeType = $imagick->getImageMimeType();
 
             if ($needsResize) {
