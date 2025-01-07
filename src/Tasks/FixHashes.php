@@ -2,10 +2,13 @@
 
 namespace Sunnysideup\ResizeAllImages\Tasks;
 
+use SilverStripe\Assets\File;
+use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Dev\BuildTask;
+use SilverStripe\ORM\DB;
 use Sunnysideup\ResizeAllImages\Api\FileHasher;
 
 class FixHashes extends BuildTask
@@ -15,14 +18,17 @@ class FixHashes extends BuildTask
      *
      * @var string
      */
-    protected $title = 'Fix Assets (images) Hashes. Use --for-real to actually fix the hashes.';
+    protected $title = 'Fix Assets (files) Hashes.';
 
     /**
      * Description
      *
      * @var string
      */
-    protected $description = 'Goes through all images and fixes the hash. Use --for-real to actually fix the hashes.';
+    protected $description = '
+        Goes through all files and fixes the hash.
+        Use sake dev/tasks/fix-hashes -r to actually fix the hashes.
+    ';
 
     /**
      * Segment URL
@@ -40,22 +46,46 @@ class FixHashes extends BuildTask
      */
     public function run($request)
     {
-        if (! Director::is_cli()) {
-            exit('Only works in cli');
+        if (!Director::is_cli()) {
+            exit('Only works in CLI.');
         }
 
-        echo '---' . PHP_EOL;
-        echo '---' . PHP_EOL;
-        $options = getopt('', ['for-real']);
-        $this->dryRun = ! isset($options['for-real']);
-        $imagesIds = Image::get()->sort(['ID' => 'DESC'])->columnUnique();
-        $hasher = FileHasher::create();
-        foreach ($imagesIds as $imageID) {
-            $image = Image::get()->byID($imageID);
-            $hasher->run($image, $this->dryRun, true);
+        echo str_repeat('-', 30) . PHP_EOL;
+        echo 'Starting Script' . PHP_EOL;
+        echo str_repeat('-', 30) . PHP_EOL;
+
+        // Parse options
+        $arguments = (array) $_SERVER['argv'];
+
+        if (in_array('-r', $arguments) || in_array('--real', $arguments)) {
+            $this->dryRun = false;
+        } else {
+            echo 'Running in dry-run mode. Use --real or -r to apply changes.' . PHP_EOL;
         }
-        echo '---' . PHP_EOL;
+
+        $fileIds = File::get()
+            ->filter(['ClassName:not' => Folder::class])
+            ->sort(['ID' => 'DESC'])
+            ->columnUnique();
+
+        $hasher = FileHasher::create();
+
+        // Process files
+        foreach ($fileIds as $fileId) {
+            $file = File::get()->byID($fileId);
+            if ($file) {
+                $hasher->run($file, $this->dryRun, true);
+            } else {
+                echo "File ID $fileId not found." . PHP_EOL;
+            }
+        }
+
+        echo str_repeat('-', 30) . PHP_EOL;
         echo 'DONE' . PHP_EOL;
-        echo '---' . PHP_EOL;
+        echo str_repeat('-', 30) . PHP_EOL;
+
+        if ($this->dryRun) {
+            echo 'This was a dry run. Use --real or -r to actually fix the hashes.' . PHP_EOL;
+        }
     }
 }
