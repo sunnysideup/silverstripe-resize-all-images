@@ -49,6 +49,8 @@ class FileHasher
                 if (!$file->exists()) {
                     $this->output('ERROR (' . ($this->dryRun ? 'DRY RUN' : 'FOR REAL') . '): hash not fixed yet: ' . $file->getFilename() . '. Please run task again.');
                 }
+            } else {
+                $this->output('ERROR: no path for file: ' . $file->ID);
             }
         } catch (Exception $e) {
             $this->output('ERROR: ' . $e->getMessage());
