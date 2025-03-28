@@ -3,7 +3,9 @@
 namespace Sunnysideup\ResizeAllImages\Api;
 
 use Exception;
+use InvalidArgumentException;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\FileHashingService;
@@ -32,13 +34,31 @@ class FileHasher
             $file = $this->getFileFilename($file);
             $file = $this->publishMismatchCheck($file);
             $path = $file->getFilename();
-            if ($file->isPublished()) {
+            $fs = $file->getVisibility();
+            if (! $fs) {
                 $fs = AssetStore::VISIBILITY_PUBLIC;
-            } else {
-                $fs = AssetStore::VISIBILITY_PROTECTED;
             }
+            $this->output($fs);
             if ($path) {
-                $hash = $hasher->computeFromFile((string) $path, $fs);
+                $flysystemAssetStore = singleton(AssetStore::class);
+                if (!($flysystemAssetStore instanceof FlysystemAssetStore)) {
+                    throw new InvalidArgumentException("FlysystemAssetStore missing");
+                }
+                $public = $flysystemAssetStore->getPublicFilesystem();
+                if ($public->has($path)) {
+                    $hash = $hasher->computeFromFile((string) $path, $fs);
+                } else {
+                    $this->output($path . ' not found in public file system, trying .protected');
+                    $patharray = explode('/', $path);
+                    $endpath = array_pop($patharray);
+                    $truncatedHash = substr($file->getHash(), 0, 10);
+                    $patharray[] = $truncatedHash;
+                    $patharray[] = $endpath;
+                    $path = implode('/', $patharray);
+                    $path = '.protected/' . $path;
+                    $hash = $hasher->computeFromFile((string) $path, AssetStore::VISIBILITY_PROTECTED);
+                }
+
                 if ($this->dryRun !== true) {
                     DB::query('UPDATE "File" SET "Filehash" = \'' . $hash . '\' WHERE "ID" = ' . $file->ID);
                 }
