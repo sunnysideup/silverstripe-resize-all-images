@@ -5,7 +5,6 @@ Firstly, review [Resizing Module](https://github.com/sunnysideup/silverstripe-sc
 Then run the command listed below.  Firstly do a dry run and review the results. This only runs from the command line:
 
 ```shell
-
 vendor/bin/sake dev/tasks/resize-all-images
 vendor/bin/sake dev/tasks/resize-all-images --for-real=1
 ```
