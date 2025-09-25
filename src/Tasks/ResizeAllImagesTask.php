@@ -55,8 +55,21 @@ class ResizeAllImagesTask extends BuildTask
         echo 'START' . PHP_EOL;
         echo '---' . PHP_EOL;
         $directory = ASSETS_PATH;
-        $dryRun = !isset($_GET['for-real']);
+        $dryRun = true;
+        // Parse options
+        $arguments = (array) $_SERVER['argv'];
 
+        if (
+            in_array('-r', $arguments) ||
+            in_array('--for-real', $arguments) ||
+            in_array('--real', $arguments) ||
+            isset($_GET['for-real']) ||
+            in_array('for-real', $arguments)
+        ) {
+            $dryRun = false;
+        } else {
+            echo 'Running in dry-run mode. Use --for-real=1 or -r to apply changes.' . PHP_EOL;
+        }
         // RUN!
         if ($this->useFilesystem) {
             /**

@@ -57,10 +57,19 @@ class FixHashes extends BuildTask
         // Parse options
         $arguments = (array) $_SERVER['argv'];
 
-        if (in_array('-r', $arguments) || in_array('--real', $arguments)) {
+        // Parse options
+        $arguments = (array) $_SERVER['argv'];
+
+        if (
+            in_array('-r', $arguments) ||
+            in_array('--for-real', $arguments) ||
+            in_array('--real', $arguments) ||
+            isset($_GET['for-real']) ||
+            in_array('for-real', $arguments)
+        ) {
             $this->dryRun = false;
         } else {
-            echo 'Running in dry-run mode. Use --real or -r to apply changes.' . PHP_EOL;
+            echo 'Running in dry-run mode. Use --for-real=1 or -r to apply changes.' . PHP_EOL;
         }
 
         $fileIds = File::get()
