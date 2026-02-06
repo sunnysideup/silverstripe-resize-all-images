@@ -57,9 +57,6 @@ class FixHashes extends BuildTask
         // Parse options
         $arguments = (array) $_SERVER['argv'];
 
-        // Parse options
-        $arguments = (array) $_SERVER['argv'];
-
         if (
             in_array('-r', $arguments) ||
             in_array('--for-real', $arguments) ||

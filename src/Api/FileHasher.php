@@ -56,7 +56,7 @@ class FileHasher
                     $patharray[] = $endpath;
                     $path = implode('/', $patharray);
                     $path = '.protected/' . $path;
-                    $hash = $hasher->computeFromFile((string) $path, AssetStore::VISIBILITY_PROTECTED);
+                    $hash = $hasher->computeFromFile($path, AssetStore::VISIBILITY_PROTECTED);
                 }
 
                 if ($this->dryRun !== true) {

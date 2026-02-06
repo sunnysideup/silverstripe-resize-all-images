@@ -121,30 +121,26 @@ class ResizeAssetsRunner extends Resizer
                 }
             }
 
-            if ($this->useWebp) {
-                if ($mimeType !== 'image/webp') {
-                    $webpImagePath = $pathWithoutExtension . '.webp';
-                    if (file_exists($webpImagePath)) {
-                        echo 'WebP already exists: ' . $webpImagePath . PHP_EOL;
-                    } else {
-                        if ($this->dryRun) {
-                            echo '-- DRY RUN: Would create WebP: ' . $webpImagePath . PHP_EOL;
-                        } else {
-                            // Convert to WebP and save
-                            $imagick->setImageFormat('webp');
-                            $imagick->writeImage($webpImagePath);
+            if ($this->useWebp && $mimeType !== 'image/webp') {
+                $webpImagePath = $pathWithoutExtension . '.webp';
+                if (file_exists($webpImagePath)) {
+                    echo 'WebP already exists: ' . $webpImagePath . PHP_EOL;
+                } elseif ($this->dryRun) {
+                    echo '-- DRY RUN: Would create WebP: ' . $webpImagePath . PHP_EOL;
+                } else {
+                    // Convert to WebP and save
+                    $imagick->setImageFormat('webp');
+                    $imagick->writeImage($webpImagePath);
 
-                            // Check if WebP is smaller
-                            if (filesize($webpImagePath) < filesize($path)) {
-                                unlink($path); // Delete original image
-                                $returnValue = $webpImagePath;
-                                $path = $webpImagePath;
-                                $imagick->readImage($webpImagePath);
-                                $mimeType = 'image/webp';
-                            } else {
-                                unlink($webpImagePath); // Delete WebP image as it is bigger
-                            }
-                        }
+                    // Check if WebP is smaller
+                    if (filesize($webpImagePath) < filesize($path)) {
+                        unlink($path); // Delete original image
+                        $returnValue = $webpImagePath;
+                        $path = $webpImagePath;
+                        $imagick->readImage($webpImagePath);
+                        $mimeType = 'image/webp';
+                    } else {
+                        unlink($webpImagePath); // Delete WebP image as it is bigger
                     }
                 }
             }
@@ -157,7 +153,7 @@ class ResizeAssetsRunner extends Resizer
                     $step = 0;
                 } else {
                     // Reduce the quality and save the image
-                    $outputQuality = $quality ? round($quality * 100 * $step) : 77; // Default to 77 if not set
+                    $outputQuality = $quality !== 0.0 ? round($quality * 100 * $step) : 77; // Default to 77 if not set
                     $imagick->setImageCompressionQuality($outputQuality);
 
                     switch ($mimeType) {
@@ -178,7 +174,7 @@ class ResizeAssetsRunner extends Resizer
                     $imagick->writeImage($path);
                     $sizeCheck = $this->fileIsTooBig($path);
 
-                    if (!$quality) {
+                    if ($quality === 0.0) {
                         $quality = $this->quality ?: 0.77;
                     }
                     $step -= $this->qualityReductionIncrement;
@@ -225,29 +221,25 @@ class ResizeAssetsRunner extends Resizer
                 }
                 imagedestroy($sourceImage);
                 unset($sourceImage);
-                if ($this->useWebp) {
-                    if ($mimeType !== 'image/webp') {
-                        $webpImagePath = $pathWithoutExtension . '.webp';
-                        if (file_exists($webpImagePath)) {
-                            echo 'WebP already exists: ' . $webpImagePath . PHP_EOL;
-                        } else {
-                            if ($this->dryRun) {
-                                echo '-- DRY RUN: Would create WebP: ' . $webpImagePath . PHP_EOL;
-                            } else {
-                                // Convert to WebP and save
-                                imagewebp($newImage, $webpImagePath, -1);
+                if ($this->useWebp && $mimeType !== 'image/webp') {
+                    $webpImagePath = $pathWithoutExtension . '.webp';
+                    if (file_exists($webpImagePath)) {
+                        echo 'WebP already exists: ' . $webpImagePath . PHP_EOL;
+                    } elseif ($this->dryRun) {
+                        echo '-- DRY RUN: Would create WebP: ' . $webpImagePath . PHP_EOL;
+                    } else {
+                        // Convert to WebP and save
+                        imagewebp($newImage, $webpImagePath, -1);
 
-                                // Check if WebP is smaller
-                                if (filesize($webpImagePath) < filesize($path)) {
-                                    unlink($path); // Delete original image
-                                    $returnValue = $webpImagePath;
-                                    $path = $webpImagePath;
-                                    $newImage = imagecreatefromwebp($webpImagePath);
-                                    $mimeType = 'image/webp';
-                                } else {
-                                    unlink($webpImagePath); // Delete WebP image - no required - as it is bigger
-                                }
-                            }
+                        // Check if WebP is smaller
+                        if (filesize($webpImagePath) < filesize($path)) {
+                            unlink($path); // Delete original image
+                            $returnValue = $webpImagePath;
+                            $path = $webpImagePath;
+                            $newImage = imagecreatefromwebp($webpImagePath);
+                            $mimeType = 'image/webp';
+                        } else {
+                            unlink($webpImagePath); // Delete WebP image - no required - as it is bigger
                         }
                     }
                 }
@@ -262,25 +254,25 @@ class ResizeAssetsRunner extends Resizer
                         // Save the image
                         switch ($mimeType) {
                             case 'image/jpeg':
-                                $jpgQuality = $quality ? round($quality * 100 * $step) : -1;
+                                $jpgQuality = $quality !== 0.0 ? round($quality * 100 * $step) : -1;
                                 imagejpeg($newImage, $path, $jpgQuality);
                                 break;
                             case 'image/png':
-                                $pngQuality = $quality ? round($quality * 9 * $step) : -1;
+                                $pngQuality = $quality !== 0.0 ? round($quality * 9 * $step) : -1;
                                 imagepng($newImage, $path, $pngQuality);
                                 break;
                             case 'image/gif':
                                 imagegif($newImage, $path);
                                 break;
                             case 'image/webp':
-                                $webpQuality = $quality ? round($quality * 100 * $step) : -1;
+                                $webpQuality = $quality !== 0.0 ? round($quality * 100 * $step) : -1;
                                 imagewebp($newImage, $path, $webpQuality);
                                 break;
                         }
                         $sizeCheck = $this->fileIsTooBig($path);
-                        if (! $quality) {
+                        if ($quality === 0.0) {
                             $quality = $this->quality;
-                            if (!$quality) {
+                            if ($quality === 0.0) {
                                 $quality = 0.77;
                             }
                         }
