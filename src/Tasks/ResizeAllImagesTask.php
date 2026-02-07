@@ -2,17 +2,15 @@
 
 namespace Sunnysideup\ResizeAllImages\Tasks;
 
-use Sunnysideup\ScaledUploads\Api\Resizer;
-use Exception;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SilverStripe\Assets\Image;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
-//use SilverStripe\Dev\Tasks\MigrateFileTask;
 use SilverStripe\Dev\BuildTask;
-use SplFileInfo;
+//use SilverStripe\Dev\Tasks\MigrateFileTask;
 use Sunnysideup\ResizeAllImages\Api\ResizeAssetsRunner;
+use Sunnysideup\ScaledUploads\Api\Resizer;
 
 class ResizeAllImagesTask extends BuildTask
 {
@@ -39,12 +37,10 @@ class ResizeAllImagesTask extends BuildTask
 
     protected $useFilesystem = false;
 
-
     /**
      * Run
      *
      * @param HTTPRequest $request HTTP request
-     *
      */
     public function run($request)
     {

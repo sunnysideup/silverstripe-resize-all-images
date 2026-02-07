@@ -4,11 +4,9 @@ namespace Sunnysideup\ResizeAllImages\Tasks;
 
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
-use SilverStripe\Assets\Image;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Dev\BuildTask;
-use SilverStripe\ORM\DB;
 use Sunnysideup\ResizeAllImages\Api\FileHasher;
 
 class FixHashes extends BuildTask
@@ -46,7 +44,7 @@ class FixHashes extends BuildTask
      */
     public function run($request)
     {
-        if (!Director::is_cli()) {
+        if (! Director::is_cli()) {
             exit('Only works in CLI.');
         }
 

@@ -2,11 +2,11 @@
 
 namespace Sunnysideup\ResizeAllImages\Api;
 
-use Sunnysideup\ScaledUploads\Api\Resizer;
 use Exception;
-use SplFileInfo;
-use SilverStripe\Assets\Image;
 use Imagick;
+use SilverStripe\Assets\Image;
+use SplFileInfo;
+use Sunnysideup\ScaledUploads\Api\Resizer;
 
 class ResizeAssetsRunner extends Resizer
 {
@@ -15,7 +15,6 @@ class ResizeAssetsRunner extends Resizer
     protected bool $useGd = false;
 
     protected array $imageExtensions;
-
 
     protected FileHasher $hasher;
 
@@ -80,7 +79,7 @@ class ResizeAssetsRunner extends Resizer
         // Get MIME type, width, and height, path and path without extension
         $path = $file->getPathname();
         $imageInfo = getimagesize($path);
-        if (!$imageInfo) {
+        if (! $imageInfo) {
             user_error("Error: Could not get image info.\n");
             return null;
         }
@@ -291,7 +290,6 @@ class ResizeAssetsRunner extends Resizer
         return $retunValue;
     }
 
-
     protected function getImageResizerLib()
     {
         if ($this->useImagick || $this->useGd) {
@@ -311,7 +309,7 @@ class ResizeAssetsRunner extends Resizer
     {
         $dbPath = str_replace(ASSETS_PATH, '', $path);
         $newDbImage = Image::get()->filter(['File.Filename' => $dbPath])->first();
-        if (!$newDbImage || !$newDbImage->exists()) {
+        if (! $newDbImage || ! $newDbImage->exists()) {
             echo 'ERROR! ' . $path . ' is not in the database!' . PHP_EOL;
             $newDbImage = Image::create();
             $newDbImage->setFromLocalFile($path, $dbPath);

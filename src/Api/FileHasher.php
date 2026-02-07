@@ -6,13 +6,11 @@ use Exception;
 use InvalidArgumentException;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
-use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Assets\Storage\Sha1FileHashingService;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 
 class FileHasher
@@ -20,6 +18,7 @@ class FileHasher
     use Injectable;
 
     protected $dryRun = true;
+
     protected $verbose = false;
 
     public function run(File $file, ?bool $dryRun = false, ?bool $verbose = false)
@@ -41,8 +40,8 @@ class FileHasher
             $this->output($fs);
             if ($path) {
                 $flysystemAssetStore = singleton(AssetStore::class);
-                if (!($flysystemAssetStore instanceof FlysystemAssetStore)) {
-                    throw new InvalidArgumentException("FlysystemAssetStore missing");
+                if (! ($flysystemAssetStore instanceof FlysystemAssetStore)) {
+                    throw new InvalidArgumentException('FlysystemAssetStore missing');
                 }
                 $public = $flysystemAssetStore->getPublicFilesystem();
                 if ($public->has($path)) {
@@ -66,7 +65,7 @@ class FileHasher
                     DB::query('UPDATE "File_Live" SET "Filehash" = \'' . $hash . '\' WHERE "ID" = ' . $file->ID);
                 }
                 $file = File::get()->byID($file->ID);
-                if (!$file->exists()) {
+                if (! $file->exists()) {
                     $this->output('ERROR (' . ($this->dryRun ? 'DRY RUN' : 'FOR REAL') . '): hash not fixed yet: ' . $file->getFilename() . '. Please run task again.');
                 }
             } else {
@@ -77,7 +76,6 @@ class FileHasher
         }
     }
 
-
     public function getFileFilename(File $file): File
     {
         $name = $file->getFilename();
@@ -87,12 +85,12 @@ class FileHasher
         $name = $file->generateFilename();
         if ($name) {
             if ($this->dryRun) {
-                $this->output("ERROR: Would set file name to: " . $name);
+                $this->output('ERROR: Would set file name to: ' . $name);
             } else {
-                $this->output("ERROR: Setting file name to: " . $name);
+                $this->output('ERROR: Setting file name to: ' . $name);
                 $file->setFilename($name);
                 if (! $file->getFilename()) {
-                    user_error("ERROR: Could not set file name to: " . $name);
+                    user_error('ERROR: Could not set file name to: ' . $name);
                 }
                 DB::query('UPDATE "File" SET "FileFilename" = \'' . $name . '\' WHERE "ID" = ' . $file->ID);
                 DB::query('UPDATE "File_Live" SET "FileFilename" = \'' . $name . '\' WHERE "ID" = ' . $file->ID);
