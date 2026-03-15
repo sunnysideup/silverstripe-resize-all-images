@@ -39,15 +39,11 @@ class ResizeAllImagesTask extends BuildTask
 
     protected $useFilesystem = false;
 
-    /**
-     * Run
-     *
-     * @param HTTPRequest $request HTTP request
-     * @TODO SSU RECTOR UPGRADE TASK - BuildTask::run: Added new parameter $output in BuildTask::run()
-     * @TODO SSU RECTOR UPGRADE TASK - BuildTask::run: Changed type of parameter $request in BuildTask::run() from dynamic to Symfony\Component\Console\Input\InputInterface
-     * @TODO SSU RECTOR UPGRADE TASK - BuildTask::run: Renamed parameter $request in BuildTask::run() to $input
-     * @TODO SSU RECTOR UPGRADE TASK - BuildTask::run: Changed return type for method BuildTask::run() from dynamic to int
-     */
+     /**
+      * Run
+      *
+      * @param HTTPRequest $request HTTP request
+      */
     protected function execute(InputInterface $input, PolyOutput $output): int
     {
         if (!Environment::isCli()) {
