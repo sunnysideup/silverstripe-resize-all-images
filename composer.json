@@ -12,8 +12,7 @@
         "Resize"
     ],
     "require": {
-        "silverstripe/framework": "^4 ||^5",
-        "sunnysideup/silverstripe-scaled-uploads": "dev-main"
+        "silverstripe/framework": "^6.0"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -35,5 +34,12 @@
             "type": "vcs",
             "url": "https://github.com/sunnysideup/silverstripe-scaled-uploads.git"
         }
-    ]
+    ],
+    "yet-to-update": {
+        "sunnysideup/silverstripe-scaled-uploads": {
+            "section": "require",
+            "current": "dev-main",
+            "reason": "no-compatible-stable-release"
+        }
+    }
 }
