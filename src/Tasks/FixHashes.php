@@ -4,10 +4,13 @@ namespace Sunnysideup\ResizeAllImages\Tasks;
 
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
-use SilverStripe\Control\Director;
-use SilverStripe\Control\HTTPRequest;
+use SilverStripe\Core\Environment;
 use SilverStripe\Dev\BuildTask;
+use SilverStripe\PolyExecution\Command\Command;
+use SilverStripe\PolyExecution\Output\PolyOutput;
 use Sunnysideup\ResizeAllImages\Api\FileHasher;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 
 class FixHashes extends BuildTask
 {
@@ -33,7 +36,7 @@ class FixHashes extends BuildTask
      *
      * @var string
      */
-    private static $segment = 'fix-hashes';
+    protected static string $commandName = 'fix-hashes';
 
     private $dryRun = true;
 
@@ -46,29 +49,20 @@ class FixHashes extends BuildTask
      * @TODO SSU RECTOR UPGRADE TASK - BuildTask::run: Renamed parameter $request in BuildTask::run() to $input
      * @TODO SSU RECTOR UPGRADE TASK - BuildTask::run: Changed return type for method BuildTask::run() from dynamic to int
      */
-    public function run($request)
+    protected function execute(InputInterface $input, PolyOutput $output): int
     {
-        if (! Director::is_cli()) {
-            exit('Only works in CLI.');
+        if (!Environment::isCli()) {
+            $output->writeln('Only works in CLI.');
+            return Command::FAILURE;
         }
 
-        echo str_repeat('-', 30) . PHP_EOL;
-        echo 'Starting Script' . PHP_EOL;
-        echo str_repeat('-', 30) . PHP_EOL;
+        $output->writeln(str_repeat('-', 30));
+        $output->writeln('Starting Script');
+        $output->writeln(str_repeat('-', 30));
 
-        // Parse options
-        $arguments = (array) $_SERVER['argv'];
-
-        if (
-            in_array('-r', $arguments) ||
-            in_array('--for-real', $arguments) ||
-            in_array('--real', $arguments) ||
-            isset($_GET['for-real']) ||
-            in_array('for-real', $arguments)
-        ) {
-            $this->dryRun = false;
-        } else {
-            echo 'Running in dry-run mode. Use --for-real=1 or -r to apply changes.' . PHP_EOL;
+        $this->dryRun = !$input->getOption('for-real');
+        if ($this->dryRun) {
+            $output->writeln('Running in dry-run mode. Use --for-real or -r to apply changes.');
         }
 
         $fileIds = File::get()
@@ -84,16 +78,28 @@ class FixHashes extends BuildTask
             if ($file) {
                 $hasher->run($file, $this->dryRun, true);
             } else {
-                echo sprintf('File ID %s not found.', $fileId) . PHP_EOL;
+                $output->writeln(sprintf('File ID %s not found.', $fileId));
             }
         }
 
-        echo str_repeat('-', 30) . PHP_EOL;
-        echo 'DONE' . PHP_EOL;
-        echo str_repeat('-', 30) . PHP_EOL;
+        $output->writeln(str_repeat('-', 30));
+        $output->writeln('Completed hash fix run');
+        $output->writeln(str_repeat('-', 30));
 
         if ($this->dryRun) {
-            echo 'This was a dry run. Use --real or -r to actually fix the hashes.' . PHP_EOL;
+            $output->writeln('This was a dry run. Use --for-real or -r to actually fix the hashes.');
         }
+
+        return Command::SUCCESS;
+    }
+
+    protected function getOptions(): array
+    {
+        return array_merge(
+            parent::getOptions(),
+            [
+                ['for-real', 'r', InputOption::VALUE_NONE, 'Apply changes instead of dry run']
+            ]
+        );
     }
 }
