@@ -80,7 +80,7 @@ class FixHashes extends BuildTask
             if ($file) {
                 $hasher->run($file, $this->dryRun, true);
             } else {
-                echo "File ID $fileId not found." . PHP_EOL;
+                echo sprintf('File ID %s not found.', $fileId) . PHP_EOL;
             }
         }
 

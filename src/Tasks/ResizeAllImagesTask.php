@@ -47,6 +47,7 @@ class ResizeAllImagesTask extends BuildTask
         if (! Director::is_cli()) {
             exit('Only works in cli');
         }
+
         echo '---' . PHP_EOL;
         echo 'START' . PHP_EOL;
         echo '---' . PHP_EOL;
@@ -66,6 +67,7 @@ class ResizeAllImagesTask extends BuildTask
         } else {
             echo 'Running in dry-run mode. Use --for-real=1 or -r to apply changes.' . PHP_EOL;
         }
+
         // RUN!
         if ($this->useFilesystem) {
             /**
@@ -92,6 +94,7 @@ class ResizeAllImagesTask extends BuildTask
                 }
             }
         }
+
         echo '---' . PHP_EOL;
         echo '---' . PHP_EOL;
         echo 'DONE - consider running vendor/bin/sake dev/tasks/fix-hashes --for-real=1' . PHP_EOL;

@@ -37,12 +37,14 @@ class FileHasher
             if (! $fs) {
                 $fs = AssetStore::VISIBILITY_PUBLIC;
             }
+
             $this->output($fs);
             if ($path) {
                 $flysystemAssetStore = singleton(AssetStore::class);
                 if (! ($flysystemAssetStore instanceof FlysystemAssetStore)) {
                     throw new InvalidArgumentException('FlysystemAssetStore missing');
                 }
+
                 $public = $flysystemAssetStore->getPublicFilesystem();
                 if ($public->has($path)) {
                     $hash = $hasher->computeFromFile((string) $path, $fs);
@@ -61,9 +63,11 @@ class FileHasher
                 if ($this->dryRun !== true) {
                     DB::query('UPDATE "File" SET "Filehash" = \'' . $hash . '\' WHERE "ID" = ' . $file->ID);
                 }
+
                 if ($file->isPublished() && ! $file->isModifiedOnDraft() && $this->dryRun !== true) {
                     DB::query('UPDATE "File_Live" SET "Filehash" = \'' . $hash . '\' WHERE "ID" = ' . $file->ID);
                 }
+
                 $file = File::get()->byID($file->ID);
                 if (! $file->exists()) {
                     $this->output('ERROR (' . ($this->dryRun ? 'DRY RUN' : 'FOR REAL') . '): hash not fixed yet: ' . $file->getFilename() . '. Please run task again.');
@@ -71,8 +75,8 @@ class FileHasher
             } else {
                 $this->output('ERROR: no path for file: ' . $file->ID);
             }
-        } catch (Exception $e) {
-            $this->output('ERROR: ' . $e->getMessage());
+        } catch (Exception $exception) {
+            $this->output('ERROR: ' . $exception->getMessage());
         }
     }
 
@@ -82,6 +86,7 @@ class FileHasher
         if ($name) {
             return $file;
         }
+
         $name = $file->generateFilename();
         if ($name) {
             if ($this->dryRun) {
@@ -92,11 +97,14 @@ class FileHasher
                 if (! $file->getFilename()) {
                     user_error('ERROR: Could not set file name to: ' . $name);
                 }
+
                 DB::query('UPDATE "File" SET "FileFilename" = \'' . $name . '\' WHERE "ID" = ' . $file->ID);
                 DB::query('UPDATE "File_Live" SET "FileFilename" = \'' . $name . '\' WHERE "ID" = ' . $file->ID);
             }
+
             $file = File::get()->byID($file->ID);
         }
+
         return $file;
     }
 
@@ -110,9 +118,11 @@ class FileHasher
                 if (! $file->isPublished()) {
                     user_error('Could not publish file: ' . $file->getFilename() . ' but file exists!', E_USER_ERROR);
                 }
+
                 $file = File::get()->byID($file->ID);
             }
         }
+
         return $file;
     }
 
