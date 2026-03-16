@@ -5,12 +5,14 @@ namespace Sunnysideup\ResizeAllImages\Tasks;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SilverStripe\Assets\Image;
-use SilverStripe\Control\Director;
-use SilverStripe\Control\HTTPRequest;
+use SilverStripe\Core\Environment;
 use SilverStripe\Dev\BuildTask;
-//use SilverStripe\Dev\Tasks\MigrateFileTask;
+use SilverStripe\PolyExecution\Command\Command;
+use SilverStripe\PolyExecution\Output\PolyOutput;
 use Sunnysideup\ResizeAllImages\Api\ResizeAssetsRunner;
 use Sunnysideup\ScaledUploads\Api\Resizer;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 
 class ResizeAllImagesTask extends BuildTask
 {
@@ -33,39 +35,32 @@ class ResizeAllImagesTask extends BuildTask
      *
      * @var string
      */
-    private static $segment = 'resize-all-images';
+    protected static string $commandName = 'resize-all-images';
 
     protected $useFilesystem = false;
 
-    /**
-     * Run
-     *
-     * @param HTTPRequest $request HTTP request
-     */
-    public function run($request)
+     /**
+      * Run
+      *
+      * @param HTTPRequest $request HTTP request
+      */
+    protected function execute(InputInterface $input, PolyOutput $output): int
     {
-        if (! Director::is_cli()) {
-            exit('Only works in cli');
+        if (!Environment::isCli()) {
+            $output->writeln('Only works in CLI');
+            return Command::FAILURE;
         }
-        echo '---' . PHP_EOL;
-        echo 'START' . PHP_EOL;
-        echo '---' . PHP_EOL;
-        $directory = ASSETS_PATH;
-        $dryRun = true;
-        // Parse options
-        $arguments = (array) $_SERVER['argv'];
 
-        if (
-            in_array('-r', $arguments) ||
-            in_array('--for-real', $arguments) ||
-            in_array('--real', $arguments) ||
-            isset($_GET['for-real']) ||
-            in_array('for-real', $arguments)
-        ) {
-            $dryRun = false;
-        } else {
-            echo 'Running in dry-run mode. Use --for-real=1 or -r to apply changes.' . PHP_EOL;
+        $output->writeln('---');
+        $output->writeln('START');
+        $output->writeln('---');
+        $directory = ASSETS_PATH;
+        $dryRun = !$input->getOption('for-real');
+
+        if ($dryRun) {
+            $output->writeln('Running in dry-run mode. Use --for-real or -r to apply changes.');
         }
+
         // RUN!
         if ($this->useFilesystem) {
             /**
@@ -74,7 +69,7 @@ class ResizeAllImagesTask extends BuildTask
             $runner = ResizeAssetsRunner::create()
                 ->setDryRun($dryRun)
                 ->setVerbose(true);
-            $this->outputVars($runner);
+            $this->outputVars($runner, $output);
             $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory), RecursiveIteratorIterator::SELF_FIRST);
             foreach ($files as $file) {
                 $runner->runFromFilesystemFileOuter($file);
@@ -83,7 +78,7 @@ class ResizeAllImagesTask extends BuildTask
             $runner = Resizer::create()
                 ->setDryRun($dryRun)
                 ->setVerbose(true);
-            $this->outputVars($runner);
+            $this->outputVars($runner, $output);
             $imagesIds = Image::get()->sort(['ID' => 'DESC'])->columnUnique();
             foreach ($imagesIds as $imageID) {
                 $image = Image::get()->byID($imageID);
@@ -92,14 +87,29 @@ class ResizeAllImagesTask extends BuildTask
                 }
             }
         }
-        echo '---' . PHP_EOL;
-        echo '---' . PHP_EOL;
-        echo 'DONE - consider running vendor/bin/sake dev/tasks/fix-hashes --for-real=1' . PHP_EOL;
-        echo '---' . PHP_EOL;
+
+        $output->writeln('---');
+        $output->writeln('---');
+        $output->writeln('Completed resize - consider running vendor/bin/sake dev/tasks/fix-hashes --for-real=1');
+        $output->writeln('---');
+
+        return Command::SUCCESS;
     }
 
-    protected function outputVars($runner)
+    protected function outputVars($runner, PolyOutput $output): void
     {
-        print_r($runner->getAllProperties());
+        foreach ($runner->getAllProperties() as $name => $value) {
+            $output->writeln(sprintf('%s: %s', $name, is_scalar($value) ? (string) $value : json_encode($value)));
+        }
+    }
+
+    protected function getOptions(): array
+    {
+        return array_merge(
+            parent::getOptions(),
+            [
+                ['for-real', 'r', InputOption::VALUE_NONE, 'Apply changes instead of dry run']
+            ]
+        );
     }
 }

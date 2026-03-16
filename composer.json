@@ -12,7 +12,7 @@
         "Resize"
     ],
     "require": {
-        "silverstripe/framework": "^4 ||^5",
+        "silverstripe/framework": "^6.0",
         "sunnysideup/silverstripe-scaled-uploads": "dev-main"
     },
     "minimum-stability": "dev",

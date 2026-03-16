@@ -54,10 +54,11 @@ class ResizeAssetsRunner extends Resizer
         $dbImage = $this->getDbImageFromPath($oldPath);
         try {
             $newFilePath = $this->runFromFilesystemFile($file);
-        } catch (Exception $e) {
+        } catch (Exception) {
             echo 'ERROR! ' . print_r($file, 1) . ' could not be resized!' . PHP_EOL;
             return;
         }
+
         if ($newFilePath) {
             $file = new SplFileInfo($newFilePath);
             $dbImage->setFromLocalFile($newFilePath, $dbImage->getFilename());
@@ -65,6 +66,7 @@ class ResizeAssetsRunner extends Resizer
         } else {
             $newFilePath = $oldPath;
         }
+
         $newDbImage = $this->getDbImageFromPath($newFilePath);
 
         $this->hasher->run($newDbImage, $this->dryRun, true);
@@ -83,6 +85,7 @@ class ResizeAssetsRunner extends Resizer
             user_error("Error: Could not get image info.\n");
             return null;
         }
+
         $mimeType = $imageInfo['mime'];
         $width = $imageInfo[0];
         $height = $imageInfo[1];
@@ -112,7 +115,7 @@ class ResizeAssetsRunner extends Resizer
 
             if ($needsResize) {
                 if ($this->dryRun) {
-                    echo "-- DRY RUN: $path ({$width}x{$height}) resize to {$newWidth}x{$newHeight}" . PHP_EOL;
+                    echo sprintf('-- DRY RUN: %s (%dx%d) resize to %dx%d', $path, $width, $height, $newWidth, $newHeight) . PHP_EOL;
                 } else {
                     // Resize the image
                     /** @phpcs-ignore-next-line */
@@ -176,6 +179,7 @@ class ResizeAssetsRunner extends Resizer
                     if ($quality === 0.0) {
                         $quality = $this->quality ?: 0.77;
                     }
+
                     $step -= $this->qualityReductionIncrement;
                 }
             }
@@ -202,13 +206,15 @@ class ResizeAssetsRunner extends Resizer
                 default:
                     return null; // Unsupported format
             }
+
             if ($sourceImage) {
                 if ($needsResize) {
                     // Resize the image
                     if (! $this->dryRun) {
                         if ($this->dryRun) {
-                            echo "-- DRY RUN: $path ({$width}x{$height}) resize to {$newWidth}x{$newHeight}" . PHP_EOL;
+                            echo sprintf('-- DRY RUN: %s (%dx%d) resize to %dx%d', $path, $width, $height, $newWidth, $newHeight) . PHP_EOL;
                         }
+
                         //set up the image object only
                         $newImage = imagecreatetruecolor($newWidth, $newHeight);
                         // add source image to new image
@@ -218,6 +224,7 @@ class ResizeAssetsRunner extends Resizer
                 } else {
                     $newImage = $sourceImage;
                 }
+
                 imagedestroy($sourceImage);
                 unset($sourceImage);
                 if ($this->useWebp && $mimeType !== 'image/webp') {
@@ -268,6 +275,7 @@ class ResizeAssetsRunner extends Resizer
                                 imagewebp($newImage, $path, $webpQuality);
                                 break;
                         }
+
                         $sizeCheck = $this->fileIsTooBig($path);
                         if ($quality === 0.0) {
                             $quality = $this->quality;
@@ -275,9 +283,11 @@ class ResizeAssetsRunner extends Resizer
                                 $quality = 0.77;
                             }
                         }
+
                         $step -= $this->qualityReductionIncrement;
                     }
                 }
+
                 // Free up memory
                 imagedestroy($newImage);
                 unset($newImage);
@@ -287,6 +297,7 @@ class ResizeAssetsRunner extends Resizer
         } else {
             user_error("Error: Neither Imagick nor GD is installed.\n");
         }
+
         return $retunValue;
     }
 
@@ -295,6 +306,7 @@ class ResizeAssetsRunner extends Resizer
         if ($this->useImagick || $this->useGd) {
             return;
         }
+
         // preferred...
         if (extension_loaded('imagick')) {
             $this->useImagick = true;
@@ -316,6 +328,7 @@ class ResizeAssetsRunner extends Resizer
             $newDbImage->write();
             $newDbImage->publishSingle();
         }
+
         return $newDbImage;
 
     }
