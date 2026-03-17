@@ -8,7 +8,7 @@ use SilverStripe\Assets\Image;
 use SilverStripe\Core\Environment;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\PolyExecution\Command\Command;
-use SilverStripe\PolyExecution\Output\PolyOutput;
+use SilverStripe\PolyExecution\PolyOutput;
 use Sunnysideup\ResizeAllImages\Api\ResizeAssetsRunner;
 use Sunnysideup\ScaledUploads\Api\Resizer;
 use Symfony\Component\Console\Input\InputInterface;
@@ -21,14 +21,14 @@ class ResizeAllImagesTask extends BuildTask
      *
      * @var string
      */
-    protected $title = 'Resize Images';
+    protected string $title = 'Resize Images';
 
     /**
      * Description
      *
      * @var string
      */
-    protected $description = 'Resize all images in the assets folder to a maximum width and height.';
+    protected static string $description = 'Resize all images in the assets folder to a maximum width and height.';
 
     /**
      * Segment URL
@@ -103,7 +103,7 @@ class ResizeAllImagesTask extends BuildTask
         }
     }
 
-    protected function getOptions(): array
+    public function getOptions(): array
     {
         return array_merge(
             parent::getOptions(),

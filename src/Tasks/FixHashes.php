@@ -7,7 +7,7 @@ use SilverStripe\Assets\Folder;
 use SilverStripe\Core\Environment;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\PolyExecution\Command\Command;
-use SilverStripe\PolyExecution\Output\PolyOutput;
+use SilverStripe\PolyExecution\PolyOutput;
 use Sunnysideup\ResizeAllImages\Api\FileHasher;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -19,14 +19,14 @@ class FixHashes extends BuildTask
      *
      * @var string
      */
-    protected $title = 'Fix Assets (files) Hashes.';
+    protected string $title = 'Fix Assets (files) Hashes.';
 
     /**
      * Description
      *
      * @var string
      */
-    protected $description = '
+    protected static string $description = '
         Goes through all files and fixes the hash.
         Use sake dev/tasks/fix-hashes -r to actually fix the hashes.
     ';
@@ -89,7 +89,7 @@ class FixHashes extends BuildTask
         return Command::SUCCESS;
     }
 
-    protected function getOptions(): array
+    public function getOptions(): array
     {
         return array_merge(
             parent::getOptions(),
