@@ -108,7 +108,7 @@ class ResizeAllImagesTask extends BuildTask
         return array_merge(
             parent::getOptions(),
             [
-                ['for-real', 'r', InputOption::VALUE_NONE, 'Apply changes instead of dry run']
+                new InputOption('for-real', 'r', InputOption::VALUE_NONE, 'Apply changes instead of dry run')
             ]
         );
     }
