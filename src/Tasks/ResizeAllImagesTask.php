@@ -8,7 +8,7 @@ use RecursiveIteratorIterator;
 use SilverStripe\Assets\Image;
 use SilverStripe\Core\Environment;
 use SilverStripe\Dev\BuildTask;
-use SilverStripe\PolyExecution\Command\Command;
+use Symfony\Component\Console\Command\Command;
 use SilverStripe\PolyExecution\PolyOutput;
 use Sunnysideup\ResizeAllImages\Api\ResizeAssetsRunner;
 use Sunnysideup\ScaledUploads\Api\Resizer;

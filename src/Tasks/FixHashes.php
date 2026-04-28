@@ -7,7 +7,7 @@ use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Core\Environment;
 use SilverStripe\Dev\BuildTask;
-use SilverStripe\PolyExecution\Command\Command;
+use Symfony\Component\Console\Command\Command;
 use SilverStripe\PolyExecution\PolyOutput;
 use Sunnysideup\ResizeAllImages\Api\FileHasher;
 use Symfony\Component\Console\Input\InputInterface;
