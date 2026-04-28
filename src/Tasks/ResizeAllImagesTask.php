@@ -95,7 +95,7 @@ class ResizeAllImagesTask extends BuildTask
         $output->writeln('Completed resize - consider running vendor/bin/sake dev/tasks/fix-hashes --for-real=1');
         $output->writeln('---');
 
-        return \Symfony\Component\Console\Command\Command::SUCCESS;
+        return Command::SUCCESS;
     }
 
     protected function outputVars($runner, PolyOutput $output): void

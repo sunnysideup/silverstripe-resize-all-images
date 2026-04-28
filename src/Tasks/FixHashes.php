@@ -87,7 +87,7 @@ class FixHashes extends BuildTask
             $output->writeln('This was a dry run. Use --for-real or -r to actually fix the hashes.');
         }
 
-        return \Symfony\Component\Console\Command\Command::SUCCESS;
+        return Command::SUCCESS;
     }
 
     #[Override]
