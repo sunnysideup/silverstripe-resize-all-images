@@ -2,6 +2,7 @@
 
 namespace Sunnysideup\ResizeAllImages\Tasks;
 
+use Override;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SilverStripe\Assets\Image;
@@ -54,6 +55,7 @@ class ResizeAllImagesTask extends BuildTask
         $output->writeln('---');
         $output->writeln('START');
         $output->writeln('---');
+
         $directory = ASSETS_PATH;
         $dryRun = !$input->getOption('for-real');
 
@@ -93,7 +95,7 @@ class ResizeAllImagesTask extends BuildTask
         $output->writeln('Completed resize - consider running vendor/bin/sake dev/tasks/fix-hashes --for-real=1');
         $output->writeln('---');
 
-        return Command::SUCCESS;
+        return \Symfony\Component\Console\Command\Command::SUCCESS;
     }
 
     protected function outputVars($runner, PolyOutput $output): void
@@ -103,6 +105,7 @@ class ResizeAllImagesTask extends BuildTask
         }
     }
 
+    #[Override]
     public function getOptions(): array
     {
         return array_merge(

@@ -2,6 +2,7 @@
 
 namespace Sunnysideup\ResizeAllImages\Tasks;
 
+use Override;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Core\Environment;
@@ -86,9 +87,10 @@ class FixHashes extends BuildTask
             $output->writeln('This was a dry run. Use --for-real or -r to actually fix the hashes.');
         }
 
-        return Command::SUCCESS;
+        return \Symfony\Component\Console\Command\Command::SUCCESS;
     }
 
+    #[Override]
     public function getOptions(): array
     {
         return array_merge(
