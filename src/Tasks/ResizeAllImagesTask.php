@@ -3,48 +3,23 @@
 namespace Sunnysideup\ResizeAllImages\Tasks;
 
 use Override;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use SilverStripe\Assets\Image;
 use SilverStripe\Core\Environment;
 use SilverStripe\Dev\BuildTask;
 use Symfony\Component\Console\Command\Command;
 use SilverStripe\PolyExecution\PolyOutput;
-use Sunnysideup\ResizeAllImages\Api\ResizeAssetsRunner;
 use Sunnysideup\ScaledUploads\Api\Resizer;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 
 class ResizeAllImagesTask extends BuildTask
 {
-    /**
-     * Title
-     *
-     * @var string
-     */
     protected string $title = 'Resize Images';
 
-    /**
-     * Description
-     *
-     * @var string
-     */
     protected static string $description = 'Resize all images in the assets folder to a maximum width and height.';
 
-    /**
-     * Segment URL
-     *
-     * @var string
-     */
     protected static string $commandName = 'resize-all-images';
 
-    protected $useFilesystem = false;
-
-     /**
-      * Run
-      *
-      * @param HTTPRequest $request HTTP request
-      */
     protected function execute(InputInterface $input, PolyOutput $output): int
     {
         if (!Environment::isCli()) {
@@ -56,36 +31,35 @@ class ResizeAllImagesTask extends BuildTask
         $output->writeln('START');
         $output->writeln('---');
 
-        $directory = ASSETS_PATH;
         $dryRun = !$input->getOption('for-real');
+        $limit = (int) $input->getOption('limit');
+        $start = (int) $input->getOption('start');
+        $nukeTmp = (bool) $input->getOption('nuke-tmp');
 
         if ($dryRun) {
             $output->writeln('Running in dry-run mode. Use --for-real or -r to apply changes.');
         }
 
-        // RUN!
-        if ($this->useFilesystem) {
-            /**
-             * @var ResizeAssetsRunner $runner
-             */
-            $runner = ResizeAssetsRunner::create()
-                ->setDryRun($dryRun)
-                ->setVerbose(true);
-            $this->outputVars($runner, $output);
-            $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory), RecursiveIteratorIterator::SELF_FIRST);
-            foreach ($files as $file) {
-                $runner->runFromFilesystemFileOuter($file);
-            }
-        } else {
-            $runner = Resizer::create()
-                ->setDryRun($dryRun)
-                ->setVerbose(true);
-            $this->outputVars($runner, $output);
-            $imagesIds = Image::get()->sort(['ID' => 'DESC'])->columnUnique();
-            foreach ($imagesIds as $imageID) {
-                $image = Image::get()->byID($imageID);
-                if ($image->isPublished()) {
-                    $runner->runFromDbFile($image);
+        if ($nukeTmp) {
+            $output->writeln('Nuke tmp enabled: will clean up ImageMagick temp files after each resize.');
+        }
+
+        $runner = Resizer::create()
+            ->setDryRun($dryRun)
+            ->setVerbose(true);
+        $this->outputVars($runner, $output);
+
+        $imagesIds = Image::get()
+            ->sort(['ID' => 'DESC'])
+            ->limit($limit ?: null, $start)
+            ->columnUnique();
+
+        foreach ($imagesIds as $imageID) {
+            $image = Image::get()->byID($imageID);
+            if ($image->isPublished()) {
+                $runner->runFromDbFile($image);
+                if ($nukeTmp) {
+                    $this->nukeTmp();
                 }
             }
         }
@@ -96,6 +70,12 @@ class ResizeAllImagesTask extends BuildTask
         $output->writeln('---');
 
         return Command::SUCCESS;
+    }
+
+    protected function nukeTmp(): void
+    {
+        exec('find /tmp -name "interventionimage_*" -delete');
+        exec('find /tmp -name "magick-*" -delete');
     }
 
     protected function outputVars($runner, PolyOutput $output): void
@@ -111,7 +91,10 @@ class ResizeAllImagesTask extends BuildTask
         return array_merge(
             parent::getOptions(),
             [
-                new InputOption('for-real', 'r', InputOption::VALUE_NONE, 'Apply changes instead of dry run')
+                new InputOption('for-real', 'r', InputOption::VALUE_NONE, 'Apply changes instead of dry run'),
+                new InputOption('limit', 'l', InputOption::VALUE_OPTIONAL, 'Maximum number of images to process', 0),
+                new InputOption('start', 's', InputOption::VALUE_OPTIONAL, 'Number of images to skip before processing', 0),
+                new InputOption('nuke-tmp', null, InputOption::VALUE_NONE, 'Clean up ImageMagick temp files after each resize'),
             ]
         );
     }
