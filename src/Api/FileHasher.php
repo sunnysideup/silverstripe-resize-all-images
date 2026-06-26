@@ -4,6 +4,8 @@ namespace Sunnysideup\ResizeAllImages\Api;
 
 use Exception;
 use InvalidArgumentException;
+use LogicException;
+use RuntimeException;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
@@ -116,7 +118,7 @@ class FileHasher
             if (file_exists($fullPath)) {
                 $file->publishSingle();
                 if (! $file->isPublished()) {
-                    user_error('Could not publish file: ' . $file->getFilename() . ' but file exists!', E_USER_ERROR);
+                    throw new RuntimeException('Could not publish file: ' . $file->getFilename() . ' but file exists!');
                 }
 
                 $file = File::get()->byID($file->ID);
